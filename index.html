@@ -129,7 +129,10 @@ h2{font-size:1.35rem;margin-bottom:.25rem}
 .enum-add button{font-size:.72rem;padding:2px 8px;border:1px solid var(--accent);background:rgba(0,192,139,.08);color:var(--text-dark);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font)}
 
 /* ---- STEP 3 ---- */
+.rule-group-label{font-size:.88rem;font-weight:700;color:var(--dark);padding:.6rem 0 .3rem;margin-top:.75rem;border-bottom:2px solid var(--accent);margin-bottom:.1rem}
+.rule-group-label:first-child{margin-top:0}
 .field-rules{display:flex;flex-direction:column;gap:.6rem}
+.rule-row.no-rules .rule-header{cursor:pointer}
 .rule-row{background:var(--white);border:1px solid #ddd;border-radius:var(--radius);overflow:hidden}
 .rule-header{padding:.85rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:.92rem;user-select:none}
 .rule-header:hover{background:#fafafa}
@@ -453,25 +456,60 @@ const SALARY_FIELD_GROUPS = [
   }
 ];
 
-// Validation rules per field type
-const RULES = {
-  Date:[
-    'Must not be more than 1 month in the past','Must not be more than 3 months in the past',
-    'Must not be more than 6 months in the past','Must not be a future date','Must be within the current calendar year'
+// Validation rules per specific field (keyed by field key)
+const FIELD_RULES = {
+  // Period
+  Duration: [
+    'Check if the stipulation for current income is at most 3 months older than the current date',
+    'Check if the stipulation for current income is not in the future',
+    'Check if the salary period lies after the employment start date'
   ],
-  Decimal:[
-    'Must be greater than 0','Must be greater than \u20ac1,000','Must be greater than \u20ac10,000',
-    'Net must be less than gross (cross-field rule)'
+  // Salary
+  Wage: [
+    'Check on salary slip if net wage is not higher than gross wage',
+    'Check if no 30% tax-free arrangement exists on the salary slip'
   ],
-  Integer:[
-    'Must be greater than 0','Must be a whole number'
+  IncomeBeforeTax: [
+    'Check if no 30% tax-free arrangement exists on the salary slip'
   ],
-  Text:[
-    'Must not be empty','Must match across documents (e.g. name on salary slip matches name on contract)',
-    'Must match expected format'
+  // Salary — Cumulative
+  CumWage: [
+    'Check on salary slip if cumulative net wage is not higher than cumulative gross wage'
   ],
-  Boolean:[
-    'Must be true','Must be false'
+  // Salary — Deductions
+  DeductionType: [
+    'Check if there is retention or distraint of wages on the payslip(s)'
+  ],
+  // Payment Details
+  NetIncome: [
+    'Check on salary slip if net wage is not higher than gross wage',
+    'Check if payment is in Euro'
+  ],
+  // Payment
+  PaymentAmount: [
+    'Check if payment is in Euro',
+    'Check if payment is not in pound sterling or other foreign currency'
+  ],
+  AccountNumber: [
+    'Check if account number (IBAN) exists on salary slip'
+  ],
+  // Employment Details
+  EmploymentNumber: [
+    'Check if employment number is not between 0 and 9 (i.e. must be a real reference)'
+  ],
+  StartDateOfEmployment: [
+    'Check if the salary period lies after the employment start date'
+  ],
+  // Various
+  DistraintOnWages: [
+    'Check if there is retention or distraint of wages on the payslip(s)'
+  ],
+  EmployerLoanRedemption: [
+    'Check if employer loan redemption amount is consistent with employment contract terms'
+  ],
+  // Manual Validations
+  IsSalaryDeductions: [
+    'Check if there is retention or distraint of wages on the payslip(s)'
   ]
 };
 
@@ -816,18 +854,29 @@ function renderStep2(el){
 function renderStep3(el){
   const selectedFields = getAllSelectedFieldObjects();
 
-  el.innerHTML = `
-    <h2>Configure validation rules</h2>
-    <p class="subtitle">Add validation rules for each selected field.</p>
-    <div class="field-rules">${selectedFields.map(f => {
-      const rules = RULES[f.type] || RULES.Text;
+  // Group selected fields by their group
+  const groupedFields = [];
+  let currentGroup = null;
+  selectedFields.forEach(f => {
+    if(f.group !== currentGroup){
+      currentGroup = f.group;
+      groupedFields.push({group: f.group, fields: []});
+    }
+    groupedFields[groupedFields.length - 1].fields.push(f);
+  });
+
+  let rulesHtml = '';
+  groupedFields.forEach(gf => {
+    rulesHtml += `<div class="rule-group-label">${gf.group}</div>`;
+    gf.fields.forEach(f => {
+      const rules = FIELD_RULES[f.key] || [];
       const active = state.fieldRules[f.key] || [];
       const customs = state.fieldCustomRules[f.key] || [];
-      const isMandatory = !!state.mandatoryFields[f.key];
-      return `<div class="rule-row" data-field="${f.key}">
+      const hasRules = rules.length > 0;
+      rulesHtml += `<div class="rule-row${hasRules ? '' : ' no-rules'}" data-field="${f.key}">
         <div class="rule-header">
-          <span>${f.label}${isMandatory ? '<span class="mandatory-flag">Required</span>' : ''}</span>
-          <span class="arrow">\u25B6</span>
+          <span>${f.label} <span class="type-badge ${f.type.toLowerCase()}" style="font-size:.62rem;vertical-align:middle">${f.type}</span></span>
+          ${hasRules ? '<span class="arrow">\u25B6</span>' : '<span style="font-size:.78rem;color:#bbb">No predefined rules</span>'}
         </div>
         <div class="rule-body">
           ${rules.map(r => {
@@ -843,7 +892,13 @@ function renderStep3(el){
           </details>
         </div>
       </div>`;
-    }).join('')}</div>`;
+    });
+  });
+
+  el.innerHTML = `
+    <h2>Configure validation rules</h2>
+    <p class="subtitle">Add validation rules for each selected field. You can also define custom rules in plain language.</p>
+    <div class="field-rules">${rulesHtml}</div>`;
 
   // Sticky bar
   document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
