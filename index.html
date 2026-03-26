@@ -59,6 +59,21 @@ h2{font-size:1.35rem;margin-bottom:.25rem}
 .doc-card .coming-soon{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:#e0e0e0;color:#777;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 .doc-card .active-badge{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:var(--accent);color:var(--dark);padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 
+/* ---- ADD CUSTOM FIELD per group ---- */
+.add-custom-field{border-top:1px dashed #ddd;padding:.85rem 1rem;background:#fafbfa;display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end}
+.add-custom-field .acf-label{font-size:.78rem;font-weight:700;color:#666;margin-bottom:.25rem;display:block}
+.add-custom-field input,.add-custom-field select,.add-custom-field textarea{font-family:var(--font);border:1px solid #ccc;border-radius:var(--radius-sm);padding:.4rem .6rem;font-size:.82rem;background:#fff}
+.add-custom-field input:focus,.add-custom-field select:focus,.add-custom-field textarea:focus{outline:none;border-color:var(--accent)}
+.acf-name{width:150px}
+.acf-type{width:110px}
+.acf-desc{flex:1;min-width:200px;resize:vertical;min-height:52px}
+.acf-group{display:flex;flex-direction:column}
+.custom-field-row td{background:rgba(255,184,77,.05)}
+.custom-field-badge{font-size:.6rem;background:#FFB84D;color:#fff;padding:1px 6px;border-radius:var(--radius-sm);font-weight:700;margin-left:.4rem;vertical-align:middle}
+.custom-field-desc{font-size:.75rem;color:#888;font-style:italic;margin-top:.2rem;line-height:1.35}
+.remove-custom-field{background:none;border:none;cursor:pointer;color:#ccc;font-size:.95rem;margin-left:.4rem;vertical-align:middle}
+.remove-custom-field:hover{color:#e74c3c}
+
 /* ---- STEP 2: Grouped fields ---- */
 .field-group{background:var(--white);border:1px solid #ddd;border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden}
 .field-group-header{padding:.8rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:.9rem;user-select:none;background:#fafbfa;border-bottom:1px solid #eee}
@@ -465,12 +480,13 @@ let state = {
   step: 1,
   docType: null,
   // Step 2: keyed by field key
-  selectedFields: {},   // key -> true
-  mandatoryFields: {},  // key -> true
-  customEnums: {},      // key -> [string]
+  selectedFields: {},       // key -> true
+  mandatoryFields: {},      // key -> true
+  customEnums: {},          // key -> [string]
+  customGroupFields: {},    // gi -> [{key, label, description, type, dta, enums, isCustom}]
   // Step 3
-  fieldRules: {},       // key -> [rule string]
-  fieldCustomRules: {}  // key -> [rule string]
+  fieldRules: {},           // key -> [rule string]
+  fieldCustomRules: {}      // key -> [rule string]
 };
 
 const STEPS = [{n:1,label:'Document type'},{n:2,label:'Configure fields'},{n:3,label:'Validation rules'}];
@@ -482,8 +498,11 @@ function getSelectedCount(){
 
 function getAllSelectedFieldObjects(){
   const result = [];
-  SALARY_FIELD_GROUPS.forEach(g => {
+  SALARY_FIELD_GROUPS.forEach((g, gi) => {
     g.fields.forEach(f => {
+      if(state.selectedFields[f.key]) result.push({...f, group: g.group});
+    });
+    (state.customGroupFields[gi] || []).forEach(f => {
       if(state.selectedFields[f.key]) result.push({...f, group: g.group});
     });
   });
@@ -548,6 +567,7 @@ function renderStep1(el){
     state.selectedFields = {};
     state.mandatoryFields = {};
     state.customEnums = {};
+    state.customGroupFields = {};
     state.fieldRules = {};
     state.fieldCustomRules = {};
     render();
@@ -584,42 +604,36 @@ function renderStep2(el){
           <thead><tr>
             <th class="cb-cell">Include</th>
             <th class="name-cell">Field Name</th>
-            <th class="type-cell">Data Type</th>
             <th class="mandatory-cell">Mandatory</th>
+            <th class="type-cell">Data Type</th>
             <th class="auto-cell">Automatically Extracted</th>
           </tr></thead>
           <tbody>`;
 
-    g.fields.forEach(f => {
+    // Helper to render a single field row
+    const renderFieldRow = (f, isCustom) => {
       const isSelected = !!state.selectedFields[f.key];
       const isMandatory = !!state.mandatoryFields[f.key];
-      const allEnums = [...(f.enums || []), ...(state.customEnums[f.key] || [])];
       const typeLower = f.type.toLowerCase();
-
-      html += `<tr>
+      let row = `<tr class="${isCustom ? 'custom-field-row' : ''}">
         <td class="cb-cell"><input type="checkbox" data-key="${f.key}" class="field-cb" ${isSelected?'checked':''}></td>
         <td>
-          <div style="font-weight:600;margin-bottom:.15rem">${f.label}</div>`;
-
-      // Show enums only when base enums exist
+          <div style="font-weight:600;margin-bottom:.15rem">${f.label}${isCustom ? '<span class="custom-field-badge">Custom</span>' : ''}</div>`;
+      if(isCustom && f.description){
+        row += `<div class="custom-field-desc">${f.description}</div>`;
+      }
       if(f.enums && f.enums.length > 0){
-        html += `<div class="enum-area"><div class="enum-pills">`;
-        (f.enums || []).forEach(ev => {
-          html += `<span class="enum-pill">${ev}</span>`;
-        });
+        row += `<div class="enum-area"><div class="enum-pills">`;
+        (f.enums || []).forEach(ev => { row += `<span class="enum-pill">${ev}</span>`; });
         (state.customEnums[f.key] || []).forEach((ev, ei) => {
-          html += `<span class="enum-pill custom-enum">${ev}<button data-key="${f.key}" data-ei="${ei}" class="remove-enum">&times;</button></span>`;
+          row += `<span class="enum-pill custom-enum">${ev}<button data-key="${f.key}" data-ei="${ei}" class="remove-enum">&times;</button></span>`;
         });
-        html += `</div>`;
-        html += `<div class="enum-add">
+        row += `</div><div class="enum-add">
           <input type="text" placeholder="Add value\u2026" data-key="${f.key}" class="enum-input">
           <button data-key="${f.key}" class="add-enum-btn">+ Add</button>
-        </div>`;
-        html += `</div>`;
+        </div></div>`;
       }
-
-      html += `</td>
-        <td class="type-cell"><span class="type-badge ${typeLower}">${f.type}</span></td>
+      row += `</td>
         <td class="mandatory-cell">
           <label class="toggle-wrap" data-key="${f.key}">
             <div class="toggle-track ${isMandatory && isSelected ? 'on' : ''}" data-key="${f.key}">
@@ -627,11 +641,33 @@ function renderStep2(el){
             </div>
           </label>
         </td>
+        <td class="type-cell"><span class="type-badge ${typeLower}">${f.type}</span></td>
         <td class="auto-cell">${f.dta ? '<span class="auto-yes">Yes</span>' : '<span class="auto-no">No</span>'}</td>
       </tr>`;
+      return row;
+    };
+
+    g.fields.forEach(f => { html += renderFieldRow(f, false); });
+    (state.customGroupFields[gi] || []).forEach((f, cfi) => {
+      html += renderFieldRow(f, true).replace('</tr>', `<td style="width:32px;text-align:center"><button class="remove-custom-field" data-gi="${gi}" data-cfi="${cfi}" title="Remove field">&times;</button></td></tr>`);
     });
 
-    html += `</tbody></table></div></div>`;
+    html += `</tbody></table>
+      <div class="add-custom-field">
+        <div class="acf-group"><label class="acf-label">Field Name</label><input type="text" class="acf-name" data-gi="${gi}" placeholder="e.g. Bonus payment"></div>
+        <div class="acf-group"><label class="acf-label">Data Type</label><select class="acf-type" data-gi="${gi}">
+          <option value="Text">Text</option>
+          <option value="Decimal">Decimal</option>
+          <option value="Integer">Integer</option>
+          <option value="Date">Date</option>
+          <option value="Boolean">Boolean</option>
+        </select></div>
+        <div class="acf-group" style="flex:1"><label class="acf-label">Field Description <span style="font-weight:400;color:#aaa">(used as extraction prompt)</span></label>
+          <textarea class="acf-desc" data-gi="${gi}" placeholder="Describe what this field represents and how it appears on the document, e.g. &quot;The one-time bonus payment shown separately on the salary slip below the gross salary line.&quot;"></textarea>
+        </div>
+        <button class="btn btn-secondary btn-sm add-custom-field-btn" data-gi="${gi}" style="align-self:flex-end">+ Add field</button>
+      </div>
+    </div></div>`;
   });
 
   el.innerHTML = html;
@@ -685,6 +721,35 @@ function renderStep2(el){
     const key = btn.dataset.key;
     const ei = parseInt(btn.dataset.ei);
     state.customEnums[key].splice(ei, 1);
+    render();
+  }));
+
+  // Add custom field per group
+  el.querySelectorAll('.add-custom-field-btn').forEach(btn => btn.addEventListener('click', () => {
+    const gi = btn.dataset.gi;
+    const nameEl = el.querySelector(`.acf-name[data-gi="${gi}"]`);
+    const typeEl = el.querySelector(`.acf-type[data-gi="${gi}"]`);
+    const descEl = el.querySelector(`.acf-desc[data-gi="${gi}"]`);
+    const name = nameEl.value.trim();
+    const desc = descEl.value.trim();
+    if(!name) { nameEl.style.borderColor='#e74c3c'; nameEl.focus(); return; }
+    if(!desc) { descEl.style.borderColor='#e74c3c'; descEl.focus(); return; }
+    if(!state.customGroupFields[gi]) state.customGroupFields[gi] = [];
+    const key = 'custom_' + gi + '_' + Date.now();
+    state.customGroupFields[gi].push({key, label:name, description:desc, type:typeEl.value, dta:false, enums:[], isCustom:true});
+    render();
+  }));
+
+  // Remove custom field
+  el.querySelectorAll('.remove-custom-field').forEach(btn => btn.addEventListener('click', () => {
+    const gi = btn.dataset.gi;
+    const cfi = parseInt(btn.dataset.cfi);
+    const removedKey = state.customGroupFields[gi][cfi].key;
+    state.customGroupFields[gi].splice(cfi, 1);
+    delete state.selectedFields[removedKey];
+    delete state.mandatoryFields[removedKey];
+    delete state.fieldRules[removedKey];
+    delete state.fieldCustomRules[removedKey];
     render();
   }));
 
@@ -819,7 +884,7 @@ function renderSummary(el){
   document.getElementById('backBtn').addEventListener('click', () => {state.step = 3; render()});
   document.getElementById('saveBtn').addEventListener('click', () => showToast('Configuration saved successfully!'));
   document.getElementById('resetBtn').addEventListener('click', () => {
-    state = {step:1, docType:null, selectedFields:{}, mandatoryFields:{}, customEnums:{}, fieldRules:{}, fieldCustomRules:{}};
+    state = {step:1, docType:null, selectedFields:{}, mandatoryFields:{}, customEnums:{}, customGroupFields:{}, fieldRules:{}, fieldCustomRules:{}};
     render();
   });
 }
