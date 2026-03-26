@@ -32,7 +32,7 @@ header span{color:var(--accent);font-size:.85rem;font-weight:400}
 .line.done{background:var(--accent)}
 
 /* ---- MAIN ---- */
-main{flex:1;max-width:960px;width:100%;margin:0 auto;padding:2rem}
+main{flex:1;max-width:1060px;width:100%;margin:0 auto;padding:2rem}
 .step-section{display:none;animation:fadeIn .35s ease}
 .step-section.visible{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -40,13 +40,19 @@ main{flex:1;max-width:960px;width:100%;margin:0 auto;padding:2rem}
 h2{font-size:1.35rem;margin-bottom:.25rem}
 .subtitle{color:#666;margin-bottom:1.5rem;font-size:.95rem}
 
-/* ---- CARDS (Step 1) ---- */
-.doc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
-.doc-card{background:var(--white);border:2px solid #ddd;border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:all .2s}
-.doc-card:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+/* ---- STEP 1: Categories & Cards ---- */
+.category-section{margin-bottom:1.75rem}
+.category-header{font-size:.95rem;font-weight:700;color:var(--dark);margin-bottom:.65rem;padding-bottom:.35rem;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:.5rem}
+.category-header .cat-icon{font-size:1.1rem}
+.doc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.75rem}
+.doc-card{background:var(--white);border:2px solid #ddd;border-radius:var(--radius);padding:1.1rem 1.2rem;cursor:pointer;transition:all .2s;position:relative}
+.doc-card:hover:not(.disabled){border-color:var(--accent);box-shadow:var(--shadow)}
 .doc-card.selected{border-color:var(--accent);background:rgba(0,192,139,.07)}
-.doc-card h3{font-size:1.05rem;margin-bottom:.35rem}
-.doc-card p{font-size:.85rem;color:#555;line-height:1.45}
+.doc-card h3{font-size:.92rem;margin-bottom:.25rem;line-height:1.3}
+.doc-card p{font-size:.78rem;color:#555;line-height:1.4}
+.doc-card.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.doc-card .coming-soon{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:#e0e0e0;color:#777;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.doc-card .active-badge{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:var(--accent);color:var(--dark);padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 
 /* ---- TWO-COL (Step 2) ---- */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
@@ -142,31 +148,162 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== DATA =====
-const DOC_TYPES = [
-  {id:'salary',name:'Salary slip',desc:'Monthly income statement issued by an employer'},
-  {id:'appraisal',name:'Appraisal report',desc:'Property valuation report issued by a certified appraiser'},
-  {id:'contract',name:'Employment contract',desc:'Formal agreement between employer and employee confirming employment terms'}
+// ===== DOCUMENT TYPE CATEGORIES =====
+const CATEGORIES = [
+  {
+    id: 'income-employment',
+    name: 'Income — Employment',
+    icon: '💼',
+    docs: [
+      {id:'employer_statement',     name:'Employer Statement',                    desc:'Declaration of employment terms and income issued by the employer', enabled:false},
+      {id:'employment_contract',    name:'Employment Contract',                   desc:'Formal agreement confirming employment terms between employer and employee', enabled:false},
+      {id:'employment_history',     name:'Employment History Overview',           desc:'Summary of past employment positions and durations', enabled:false},
+      {id:'salary',                 name:'Salary Slip',                           desc:'Monthly income statement issued by an employer detailing gross/net pay', enabled:true},
+      {id:'annual_income_y1',       name:'Annual Income Statement (Year -1)',     desc:'Official statement of total income earned in the previous year', enabled:false},
+      {id:'annual_income_y2',       name:'Annual Income Statement (Year -2)',     desc:'Official statement of total income earned two years ago', enabled:false},
+      {id:'annual_income_y3',       name:'Annual Income Statement (Year -3)',     desc:'Official statement of total income earned three years ago', enabled:false},
+      {id:'annual_salary_y1',       name:'Annual Salary Overview (Year -1)',      desc:'Detailed salary breakdown for the previous calendar year', enabled:false},
+      {id:'annual_salary_y2',       name:'Annual Salary Overview (Year -2)',      desc:'Detailed salary breakdown for two calendar years ago', enabled:false},
+      {id:'annual_salary_y3',       name:'Annual Salary Overview (Year -3)',      desc:'Detailed salary breakdown for three calendar years ago', enabled:false},
+      {id:'perspective_statement',  name:'Future Income Perspective',             desc:'Employer projection of expected salary growth and career development', enabled:false},
+      {id:'future_salary_increase', name:'Confirmed Salary Increase',            desc:'Written confirmation of an upcoming salary raise with effective date', enabled:false},
+      {id:'result_key_ibl',         name:'Key Income Figure (IBL)',              desc:'Result key figure used in income-based lending calculations', enabled:false},
+      {id:'income_statement_ibl',   name:'Income Statement for Lending (IBL)',   desc:'Standardised income statement used for mortgage lending assessments', enabled:false}
+    ]
+  },
+  {
+    id: 'income-benefits',
+    name: 'Income — Benefits, Annuities & Pension',
+    icon: '🏦',
+    docs: [
+      {id:'disability_current',   name:'Current Disability Benefit',              desc:'Ongoing social benefit payment for disability or incapacity', enabled:false},
+      {id:'disability_conferment',name:'Disability Benefit Award Decision',       desc:'Official decision granting a social benefit for disability', enabled:false},
+      {id:'annuity_current',      name:'Current Life Annuity',                    desc:'Ongoing periodic payments from a life annuity insurance policy', enabled:false},
+      {id:'annuity_future',       name:'Future Life Annuity',                     desc:'Projected future payments from a life annuity starting at a later date', enabled:false},
+      {id:'pension_current',      name:'Current Pension Statement (MPO)',         desc:'Overview of current pension payments being received', enabled:false},
+      {id:'pension_future',       name:'Future Pension Projection (MPO)',         desc:'Expected pension income based on accrued pension rights', enabled:false},
+      {id:'policy_data_mortgage', name:'Mortgage-Linked Policy Details',          desc:'Insurance or investment policy linked to the mortgage for repayment', enabled:false}
+    ]
+  },
+  {
+    id: 'collateral-existing',
+    name: 'Collateral — Existing Property',
+    icon: '🏠',
+    docs: [
+      {id:'purchase_agreement',     name:'Purchase Agreement',                    desc:'Signed contract between buyer and seller for property purchase', enabled:false},
+      {id:'purchase_agreement_land',name:'Land Purchase Agreement',               desc:'Contract for the purchase of a plot of land', enabled:false},
+      {id:'land_registration',      name:'Land Registry Ownership Proof',         desc:'Official extract confirming property ownership from the land registry', enabled:false},
+      {id:'appraisal',              name:'Appraisal Report',                      desc:'Property valuation report issued by a certified appraiser', enabled:false},
+      {id:'valuation_current',      name:'Current Property Valuation',            desc:'Recent valuation of the existing property or collateral object', enabled:false},
+      {id:'mortgage_land_reg',      name:'Mortgage Registration (Land Registry)', desc:'Official land registry extract showing registered mortgage details', enabled:false},
+      {id:'energy_label',           name:'Energy Performance Label',              desc:'Official energy efficiency classification of the property', enabled:false},
+      {id:'leasehold',              name:'Leasehold Agreement',                   desc:'Contract specifying ground lease terms and annual fees', enabled:false},
+      {id:'structural_condition',   name:'Structural Condition Report',           desc:'Technical inspection report assessing the building\'s physical condition', enabled:false}
+    ]
+  },
+  {
+    id: 'collateral-new',
+    name: 'Collateral — New Construction',
+    icon: '🏗️',
+    docs: [
+      {id:'construction_agreement', name:'Construction Agreement',                desc:'Contract for the construction of a new-build property', enabled:false},
+      {id:'contracting_agreement',  name:'Contracting Agreement',                 desc:'Formal contracting agreement (aanneemovereenkomst) with a builder', enabled:false},
+      {id:'extra_work_costs',       name:'Additional Building Costs',             desc:'Overview of extra work and upgrades beyond the base construction', enabled:false},
+      {id:'rebuilding_costs',       name:'Renovation / Rebuilding Costs',         desc:'Cost breakdown for property renovation or structural rebuilding', enabled:false},
+      {id:'appraisal_new',          name:'New Build Appraisal',                   desc:'Valuation report for a property under construction or yet to be built', enabled:false},
+      {id:'environmental_permit',   name:'Environmental / Building Permit',       desc:'Government permit authorising construction or environmental compliance', enabled:false}
+    ]
+  },
+  {
+    id: 'income-self-employed',
+    name: 'Income — Self-Employed & Tax',
+    icon: '📊',
+    docs: [
+      {id:'income_business',        name:'Business Income Statement',             desc:'Profit & loss or income overview from self-employment or a business', enabled:false},
+      {id:'tax_return_y1',          name:'Income Tax Return (Year -1)',           desc:'Filed personal income tax return for the previous year', enabled:false},
+      {id:'tax_return_y2',          name:'Income Tax Return (Year -2)',           desc:'Filed personal income tax return for two years ago', enabled:false},
+      {id:'tax_return_y3',          name:'Income Tax Return (Year -3)',           desc:'Filed personal income tax return for three years ago', enabled:false},
+      {id:'tax_return_recent',      name:'Most Recent Tax Return',                desc:'The latest filed income tax return available', enabled:false},
+      {id:'kvk_registration',       name:'Chamber of Commerce Registration',      desc:'Extract from the trade register confirming business registration', enabled:false}
+    ]
+  },
+  {
+    id: 'identity-legal',
+    name: 'Identity, Legal & Formal',
+    icon: '📋',
+    docs: [
+      {id:'identity_document',      name:'Identity Document',                     desc:'Passport, ID card or driving licence for identity verification', enabled:false},
+      {id:'residence_permit',       name:'Residence Permit',                      desc:'Official permit granting the right to reside in the Netherlands', enabled:false},
+      {id:'gba_summary',            name:'Municipal Records Extract (GBA)',       desc:'Summary from the municipal personal records database', enabled:false},
+      {id:'authorization',          name:'Authorisation for Data Collection',     desc:'Signed consent allowing the collection and verification of personal data', enabled:false},
+      {id:'bank_guarantee',         name:'Bank Guarantee',                        desc:'Financial guarantee issued by a bank on behalf of the buyer', enabled:false},
+      {id:'signed_offer',           name:'Signed Mortgage Offer',                 desc:'Mortgage offer that has been signed and accepted by the applicant', enabled:false},
+      {id:'motivation_form',        name:'Motivation / Application Form',         desc:'Completed form explaining the purpose and background of the application', enabled:false}
+    ]
+  },
+  {
+    id: 'loans-debts',
+    name: 'Loans, Credits & Residual Debts',
+    icon: '💳',
+    docs: [
+      {id:'redemption_proforma',    name:'Redemption Statement (Pro Forma)',      desc:'Estimated payoff amount for an existing mortgage or loan', enabled:false},
+      {id:'redemption_credit',      name:'Credit Redemption Statement',           desc:'Pro forma redemption overview for a revolving or instalment credit', enabled:false},
+      {id:'study_loan',             name:'Study Loan Overview',                   desc:'Balance and repayment details of a student loan (DUO)', enabled:false},
+      {id:'financial_obligation',   name:'Financial Obligation Contract',         desc:'Signed agreement for any financial obligation (loan, lease, etc.)', enabled:false},
+      {id:'balance_credit',         name:'Credit Balance Statement',              desc:'Current outstanding balance on a credit facility', enabled:false},
+      {id:'residual_debt',          name:'Residual Debt Statement',               desc:'Remaining debt after property sale or loan restructuring', enabled:false},
+      {id:'residual_refinance',     name:'Residual Debt for Refinancing',         desc:'Outstanding debt being carried over into a new mortgage', enabled:false},
+      {id:'residual_loss_sale',     name:'Residual Debt from Property Loss',      desc:'Remaining debt resulting from a sale at a loss', enabled:false},
+      {id:'proof_redemption',       name:'Proof of Loan Redemption',              desc:'Confirmation that an existing loan or mortgage has been fully repaid', enabled:false},
+      {id:'abolish_revolving',      name:'Closure of Revolving Credit',           desc:'Confirmation that a revolving credit facility has been terminated', enabled:false},
+      {id:'abolish_instalment',     name:'Closure of Instalment Credit',          desc:'Confirmation that an instalment credit has been fully closed', enabled:false}
+    ]
+  },
+  {
+    id: 'relationship-divorce',
+    name: 'Relationship & Divorce',
+    icon: '⚖️',
+    docs: [
+      {id:'divorce_decree',         name:'Divorce Decree',                        desc:'Court ruling officially dissolving the marriage', enabled:false},
+      {id:'divorce_settlement',     name:'Divorce Settlement Agreement',          desc:'Agreed division of assets, debts and obligations between ex-partners', enabled:false},
+      {id:'registration_divorce',   name:'Divorce Registration Proof',            desc:'Confirmation that the divorce has been registered in civil records', enabled:false},
+      {id:'marital_conditions',     name:'Marital Conditions (Prenup)',           desc:'Pre- or postnuptial agreement specifying financial arrangements', enabled:false},
+      {id:'distribution_divorce',   name:'Asset Distribution After Divorce',      desc:'Overview of how assets and liabilities were divided post-divorce', enabled:false}
+    ]
+  },
+  {
+    id: 'rental-housing',
+    name: 'Rental & Current Housing',
+    icon: '🔑',
+    docs: [
+      {id:'rental_agreements',      name:'Rental Agreements',                     desc:'Signed lease contracts for properties owned by the applicant', enabled:false},
+      {id:'rent_agreement',         name:'Current Rental Agreement',              desc:'Active lease agreement for the applicant\'s current residence', enabled:false},
+      {id:'rental_payments',        name:'Recent Rental Payment Proof',           desc:'Evidence of the most recent rental payments made or received', enabled:false},
+      {id:'mortgage_costs_rental',  name:'Mortgage Costs for Rental Property',    desc:'Proof of mortgage expenses on a property that is being rented out', enabled:false},
+      {id:'permission_to_rent',     name:'Permission to Rent Out Property',       desc:'Lender\'s or owner\'s consent to rent the property to a third party', enabled:false},
+      {id:'sale_current_object',    name:'Sale Agreement — Current Property',     desc:'Purchase contract for the sale of the applicant\'s current home', enabled:false}
+    ]
+  },
+  {
+    id: 'other',
+    name: 'Other Documents',
+    icon: '📁',
+    docs: [
+      {id:'other_income_proof',     name:'Proof of Other Income',                 desc:'Supporting document for miscellaneous income (e.g. annuity payments)', enabled:false}
+    ]
+  }
 ];
 
+// Flatten for lookups
+const ALL_DOCS = CATEGORIES.flatMap(c => c.docs);
+
+// ===== FIELDS (only Salary Slip is fully configured) =====
 const FIELDS = {
   salary:[
     {name:'Full name',type:'text'},{name:'Employer name',type:'text'},{name:'Employment number',type:'ref'},
     {name:'Gross salary',type:'amount'},{name:'Net salary',type:'amount'},{name:'Holiday allowance',type:'amount'},
     {name:'Payslip date',type:'date'},{name:'Payment date',type:'date'},{name:'IBAN',type:'ref'},
     {name:'Tax identification number',type:'ref'},{name:'Pension contribution',type:'amount'},{name:'Contract type',type:'cat'}
-  ],
-  appraisal:[
-    {name:'Property address',type:'text'},{name:'Appraiser name',type:'text'},{name:'Appraiser certification number',type:'ref'},
-    {name:'Valuation date',type:'date'},{name:'Market value',type:'amount'},{name:'Forced sale value',type:'amount'},
-    {name:'Property type',type:'cat'},{name:'Construction year',type:'text'},{name:'Floor area (m²)',type:'text'},
-    {name:'Energy label',type:'cat'},{name:'Valuation method',type:'text'},{name:'Report reference number',type:'ref'}
-  ],
-  contract:[
-    {name:'Employee full name',type:'text'},{name:'Employer name',type:'text'},{name:'Job title',type:'text'},
-    {name:'Department',type:'text'},{name:'Start date',type:'date'},{name:'Contract type (permanent / fixed-term)',type:'cat'},
-    {name:'End date (if applicable)',type:'date'},{name:'Gross monthly salary',type:'amount'},{name:'Probation period',type:'text'},
-    {name:'Notice period',type:'text'},{name:'Working hours per week',type:'text'},{name:'Workplace location',type:'text'}
   ]
 };
 
@@ -176,7 +313,7 @@ const RULES = {
     'Must not be more than 6 months in the past','Must not be a future date','Must be within the current calendar year'
   ],
   amount:[
-    'Must be greater than 0','Must be greater than €1,000','Must be greater than €10,000',
+    'Must be greater than 0','Must be greater than \u20ac1,000','Must be greater than \u20ac10,000',
     'Net must be less than gross (cross-field rule)','Forced sale value must be less than market value (cross-field rule)'
   ],
   text:[
@@ -202,7 +339,7 @@ function renderProgress(){
     const cls = s.n < state.step ? 'done' : s.n === state.step ? 'active' : '';
     const lineCls = s.n < state.step ? 'done' : '';
     return `<div class="step-ind">
-      <div class="step-circle ${cls}">${s.n < state.step ? '✓' : s.n}</div>
+      <div class="step-circle ${cls}">${s.n < state.step ? '\u2713' : s.n}</div>
       <div class="step-label ${cls}">${s.label}</div>
       ${i < STEPS.length-1 ? `<div class="line ${lineCls}"></div>` : ''}
     </div>`;
@@ -220,40 +357,63 @@ function render(){
 
 // --- STEP 1 ---
 function renderStep1(el){
-  el.innerHTML = `
+  let html = `
     <h2>Select document type</h2>
-    <p class="subtitle">Choose the type of document you want to configure for data extraction.</p>
-    <div class="doc-cards">${DOC_TYPES.map(d=>`
-      <div class="doc-card ${state.docType===d.id?'selected':''}" data-id="${d.id}">
-        <h3>${d.name}</h3><p>${d.desc}</p>
-      </div>`).join('')}
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" id="nextBtn" ${!state.docType?'disabled':''}>Next</button>
-    </div>`;
-  el.querySelectorAll('.doc-card').forEach(c=>c.addEventListener('click',()=>{
+    <p class="subtitle">Choose the document you want to configure for data extraction and validation. Documents marked <strong>Active</strong> are fully configurable.</p>`;
+
+  CATEGORIES.forEach(cat => {
+    html += `<div class="category-section">
+      <div class="category-header"><span class="cat-icon">${cat.icon}</span> ${cat.name}</div>
+      <div class="doc-cards">`;
+    cat.docs.forEach(d => {
+      const isEnabled = d.enabled;
+      const isSelected = state.docType === d.id;
+      const cardClass = isSelected ? 'doc-card selected' : (isEnabled ? 'doc-card' : 'doc-card disabled');
+      const badge = isEnabled
+        ? '<span class="active-badge">Active</span>'
+        : '<span class="coming-soon">Coming soon</span>';
+      html += `<div class="${cardClass}" data-id="${d.id}" data-enabled="${isEnabled}">
+        ${badge}
+        <h3>${d.name}</h3>
+        <p>${d.desc}</p>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div class="btn-group">
+    <button class="btn btn-primary" id="nextBtn" ${!state.docType?'disabled':''}>Next</button>
+  </div>`;
+
+  el.innerHTML = html;
+
+  el.querySelectorAll('.doc-card:not(.disabled)').forEach(c => c.addEventListener('click', () => {
     state.docType = c.dataset.id;
-    state.fields = FIELDS[state.docType].map(f=>({...f}));
+    state.fields = (FIELDS[state.docType] || []).map(f => ({...f}));
     state.customFields = [];
     state.selectedFields = [];
     state.fieldRules = {};
     state.fieldCustomRules = {};
     render();
   }));
-  document.getElementById('nextBtn').addEventListener('click',()=>{if(state.docType){state.step=2;render()}});
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if(state.docType){state.step = 2; render();}
+  });
 }
 
 // --- STEP 2 ---
 function renderStep2(el){
+  const doc = ALL_DOCS.find(d => d.id === state.docType);
   const allFields = [...state.fields, ...state.customFields];
   el.innerHTML = `
     <h2>Configure fields</h2>
-    <p class="subtitle">Select the fields you want to extract from the <strong>${DOC_TYPES.find(d=>d.id===state.docType).name}</strong>.</p>
+    <p class="subtitle">Select the fields you want to extract from the <strong>${doc.name}</strong>.</p>
     <div class="two-col">
       <div>
         <div class="col-head">Available fields</div>
-        <ul class="field-list" id="fieldList">${allFields.map((f,i)=>{
-          const checked = state.selectedFields.includes(f.name)?'checked':'';
+        <ul class="field-list" id="fieldList">${allFields.map((f,i) => {
+          const checked = state.selectedFields.includes(f.name) ? 'checked' : '';
           const badge = f.custom ? ' <span class="badge">custom</span>' : '';
           return `<li><label><input type="checkbox" data-name="${f.name}" ${checked}>${f.name}${badge}</label></li>`;
         }).join('')}</ul>
@@ -268,7 +428,9 @@ function renderStep2(el){
       </div>
       <div>
         <div class="col-head">Selected fields <span style="font-weight:400;font-size:.82rem;color:#888">(${state.selectedFields.length})</span></div>
-        <div class="pills-area" id="pillsArea">${state.selectedFields.length === 0 ? '<span style="color:#aaa;font-size:.85rem">No fields selected yet</span>' : state.selectedFields.map(n=>`<span class="pill">${n}<button data-name="${n}">&times;</button></span>`).join('')}</div>
+        <div class="pills-area" id="pillsArea">${state.selectedFields.length === 0
+          ? '<span style="color:#aaa;font-size:.85rem">No fields selected yet</span>'
+          : state.selectedFields.map(n => `<span class="pill">${n}<button data-name="${n}">&times;</button></span>`).join('')}</div>
       </div>
     </div>
     <div class="btn-group">
@@ -276,37 +438,37 @@ function renderStep2(el){
       <button class="btn btn-primary" id="nextBtn" ${state.selectedFields.length===0?'disabled':''}>Next</button>
     </div>`;
 
-  el.querySelectorAll('#fieldList input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener('change',()=>{
+  el.querySelectorAll('#fieldList input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
       const name = cb.dataset.name;
       if(cb.checked){if(!state.selectedFields.includes(name)) state.selectedFields.push(name)}
-      else{state.selectedFields = state.selectedFields.filter(n=>n!==name); delete state.fieldRules[name]; delete state.fieldCustomRules[name]}
+      else{state.selectedFields = state.selectedFields.filter(n => n !== name); delete state.fieldRules[name]; delete state.fieldCustomRules[name]}
       render();
     });
   });
-  el.querySelectorAll('#pillsArea button').forEach(b=>{
-    b.addEventListener('click',()=>{
+  el.querySelectorAll('#pillsArea button').forEach(b => {
+    b.addEventListener('click', () => {
       const name = b.dataset.name;
-      state.selectedFields = state.selectedFields.filter(n=>n!==name);
+      state.selectedFields = state.selectedFields.filter(n => n !== name);
       delete state.fieldRules[name]; delete state.fieldCustomRules[name];
       render();
     });
   });
-  document.getElementById('addCfBtn').addEventListener('click',()=>{
+  document.getElementById('addCfBtn').addEventListener('click', () => {
     const name = document.getElementById('cfName').value.trim();
     if(!name) return;
-    if([...state.fields,...state.customFields].some(f=>f.name===name)) return;
-    state.customFields.push({name,desc:document.getElementById('cfDesc').value.trim(),type:'text',custom:true});
+    if([...state.fields,...state.customFields].some(f => f.name === name)) return;
+    state.customFields.push({name, desc:document.getElementById('cfDesc').value.trim(), type:'text', custom:true});
     render();
   });
-  document.getElementById('backBtn').addEventListener('click',()=>{state.step=1;render()});
-  document.getElementById('nextBtn').addEventListener('click',()=>{if(state.selectedFields.length){state.step=3;render()}});
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 1; render()});
+  document.getElementById('nextBtn').addEventListener('click', () => {if(state.selectedFields.length){state.step = 3; render()}});
 }
 
 // --- STEP 3 ---
 function getFieldType(name){
   const all = [...state.fields,...state.customFields];
-  const f = all.find(x=>x.name===name);
+  const f = all.find(x => x.name === name);
   return f ? f.type : 'text';
 }
 
@@ -314,27 +476,27 @@ function renderStep3(el){
   el.innerHTML = `
     <h2>Configure validation rules</h2>
     <p class="subtitle">Add validation rules for each selected field.</p>
-    <div class="field-rules" id="fieldRules">${state.selectedFields.map(name=>{
+    <div class="field-rules" id="fieldRules">${state.selectedFields.map(name => {
       const type = getFieldType(name);
       const rules = RULES[type] || RULES.text;
       const active = state.fieldRules[name] || [];
       const customs = state.fieldCustomRules[name] || [];
-      const isCustomField = state.customFields.some(f=>f.name===name);
+      const isCustomField = state.customFields.some(f => f.name === name);
       return `<div class="rule-row" data-field="${name}">
         <div class="rule-header">
-          <span>${name}${isCustomField?' <span class="badge" style="font-size:.6rem">custom</span>':''}</span>
-          <span class="arrow">▶</span>
+          <span>${name}${isCustomField ? ' <span class="badge" style="font-size:.6rem">custom</span>' : ''}</span>
+          <span class="arrow">\u25B6</span>
         </div>
         <div class="rule-body">
-          ${rules.map(r=>{
-            const checked = active.includes(r)?'checked':'';
+          ${rules.map(r => {
+            const checked = active.includes(r) ? 'checked' : '';
             return `<div class="rule-option"><input type="checkbox" data-field="${name}" data-rule="${r}" ${checked}><span>${r}</span></div>`;
           }).join('')}
-          ${active.length?`<div class="active-rules">${active.map(r=>`<span class="pill">${r}<button data-field="${name}" data-rule="${r}">&times;</button></span>`).join('')}</div>`:''}
-          ${customs.length?`<div class="custom-rule-list">${customs.map((r,i)=>`<div class="custom-rule-tag"><span class="badge">custom</span><span>${r}</span><button data-field="${name}" data-ci="${i}">&times;</button></div>`).join('')}</div>`:''}
+          ${active.length ? `<div class="active-rules">${active.map(r => `<span class="pill">${r}<button data-field="${name}" data-rule="${r}">&times;</button></span>`).join('')}</div>` : ''}
+          ${customs.length ? `<div class="custom-rule-list">${customs.map((r,i) => `<div class="custom-rule-tag"><span class="badge">custom</span><span>${r}</span><button data-field="${name}" data-ci="${i}">&times;</button></div>`).join('')}</div>` : ''}
           <details class="custom-rule-area">
             <summary>+ Add custom rule</summary>
-            <textarea placeholder="Describe the validation rule in plain language…" data-field="${name}"></textarea>
+            <textarea placeholder="Describe the validation rule in plain language\u2026" data-field="${name}"></textarea>
             <button class="btn btn-primary btn-sm" style="margin-top:.4rem" data-addcr="${name}">Add rule</button>
           </details>
         </div>
@@ -345,43 +507,38 @@ function renderStep3(el){
       <button class="btn btn-primary" id="nextBtn">Review configuration</button>
     </div>`;
 
-  // Toggle expand
-  el.querySelectorAll('.rule-header').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
-  // Rule checkboxes
-  el.querySelectorAll('.rule-option input').forEach(cb=>cb.addEventListener('change',()=>{
-    const f=cb.dataset.field, r=cb.dataset.rule;
-    if(!state.fieldRules[f]) state.fieldRules[f]=[];
+  el.querySelectorAll('.rule-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+  el.querySelectorAll('.rule-option input').forEach(cb => cb.addEventListener('change', () => {
+    const f = cb.dataset.field, r = cb.dataset.rule;
+    if(!state.fieldRules[f]) state.fieldRules[f] = [];
     if(cb.checked){if(!state.fieldRules[f].includes(r)) state.fieldRules[f].push(r)}
-    else{state.fieldRules[f]=state.fieldRules[f].filter(x=>x!==r)}
+    else{state.fieldRules[f] = state.fieldRules[f].filter(x => x !== r)}
     render(); openRow(f);
   }));
-  // Remove rule pill
-  el.querySelectorAll('.active-rules button').forEach(b=>b.addEventListener('click',e=>{
+  el.querySelectorAll('.active-rules button').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    const f=b.dataset.field, r=b.dataset.rule;
-    state.fieldRules[f]=state.fieldRules[f].filter(x=>x!==r);
+    const f = b.dataset.field, r = b.dataset.rule;
+    state.fieldRules[f] = state.fieldRules[f].filter(x => x !== r);
     render(); openRow(f);
   }));
-  // Remove custom rule
-  el.querySelectorAll('.custom-rule-list button').forEach(b=>b.addEventListener('click',e=>{
+  el.querySelectorAll('.custom-rule-list button').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    const f=b.dataset.field, i=parseInt(b.dataset.ci);
-    state.fieldCustomRules[f].splice(i,1);
+    const f = b.dataset.field, i = parseInt(b.dataset.ci);
+    state.fieldCustomRules[f].splice(i, 1);
     render(); openRow(f);
   }));
-  // Add custom rule
-  el.querySelectorAll('[data-addcr]').forEach(btn=>btn.addEventListener('click',()=>{
-    const f=btn.dataset.addcr;
-    const ta=el.querySelector(`textarea[data-field="${f}"]`);
-    const v=ta.value.trim();
+  el.querySelectorAll('[data-addcr]').forEach(btn => btn.addEventListener('click', () => {
+    const f = btn.dataset.addcr;
+    const ta = el.querySelector(`textarea[data-field="${f}"]`);
+    const v = ta.value.trim();
     if(!v) return;
-    if(!state.fieldCustomRules[f]) state.fieldCustomRules[f]=[];
+    if(!state.fieldCustomRules[f]) state.fieldCustomRules[f] = [];
     state.fieldCustomRules[f].push(v);
     render(); openRow(f);
   }));
 
-  document.getElementById('backBtn').addEventListener('click',()=>{state.step=2;render()});
-  document.getElementById('nextBtn').addEventListener('click',()=>{state.step=4;render()});
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 2; render()});
+  document.getElementById('nextBtn').addEventListener('click', () => {state.step = 4; render()});
 }
 
 function openRow(fieldName){
@@ -391,23 +548,23 @@ function openRow(fieldName){
 
 // --- SUMMARY ---
 function renderSummary(el){
-  const docName = DOC_TYPES.find(d=>d.id===state.docType).name;
+  const doc = ALL_DOCS.find(d => d.id === state.docType);
   el.innerHTML = `
     <h2>Configuration summary</h2>
     <p class="subtitle">Review your extraction and validation configuration.</p>
     <div class="summary-card">
       <h3>Document type</h3>
-      <div class="doc-type">${docName}</div>
+      <div class="doc-type">${doc.name}</div>
       <h3 style="margin-bottom:.75rem">Configured fields &amp; rules</h3>
-      ${state.selectedFields.map(name=>{
+      ${state.selectedFields.map(name => {
         const rules = state.fieldRules[name] || [];
         const customs = state.fieldCustomRules[name] || [];
-        const isCustom = state.customFields.some(f=>f.name===name);
+        const isCustom = state.customFields.some(f => f.name === name);
         return `<div class="summary-field">
-          <h4>${name}${isCustom?' <span class="badge">custom</span>':''}</h4>
-          ${rules.length||customs.length ? `<ul>
-            ${rules.map(r=>`<li>${r}</li>`).join('')}
-            ${customs.map(r=>`<li>${r}<span class="badge">custom</span></li>`).join('')}
+          <h4>${name}${isCustom ? ' <span class="badge">custom</span>' : ''}</h4>
+          ${rules.length || customs.length ? `<ul>
+            ${rules.map(r => `<li>${r}</li>`).join('')}
+            ${customs.map(r => `<li>${r}<span class="badge">custom</span></li>`).join('')}
           </ul>` : '<p style="font-size:.84rem;color:#999;margin-top:.15rem">No validation rules configured</p>'}
         </div>`;
       }).join('')}
@@ -418,19 +575,19 @@ function renderSummary(el){
       <button class="btn btn-secondary" id="resetBtn">Start new configuration</button>
     </div>`;
 
-  document.getElementById('backBtn').addEventListener('click',()=>{state.step=3;render()});
-  document.getElementById('saveBtn').addEventListener('click',()=>showToast('Configuration saved successfully!'));
-  document.getElementById('resetBtn').addEventListener('click',()=>{
-    state={step:1,docType:null,fields:[],customFields:[],selectedFields:[],fieldRules:{},fieldCustomRules:{}};
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 3; render()});
+  document.getElementById('saveBtn').addEventListener('click', () => showToast('Configuration saved successfully!'));
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    state = {step:1, docType:null, fields:[], customFields:[], selectedFields:[], fieldRules:{}, fieldCustomRules:{}};
     render();
   });
 }
 
 function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // ===== INIT =====
