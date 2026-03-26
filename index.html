@@ -17,10 +17,10 @@ body{font-family:var(--font);background:#f4f6f5;color:var(--text-dark);min-heigh
 /* ---- HEADER ---- */
 header{background:var(--dark);padding:1.25rem 2rem;display:flex;align-items:baseline;gap:.6rem}
 header h1{color:var(--white);font-size:1.4rem;font-weight:700;letter-spacing:-.02em}
-header span{color:var(--accent);font-size:.85rem;font-weight:400}
+header span.powered{color:var(--accent);font-size:.85rem;font-weight:400}
 
 /* ---- PROGRESS ---- */
-.progress-bar{background:var(--dark);padding:.75rem 2rem 1.25rem;display:flex;justify-content:center;gap:0}
+.progress-bar{background:var(--dark);padding:.75rem 2rem 1.25rem;display:flex;justify-content:center;gap:0;position:sticky;top:0;z-index:50}
 .progress-bar .step-ind{display:flex;align-items:center}
 .progress-bar .step-ind:last-child .line{display:none}
 .step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;border:2px solid rgba(255,255,255,.25);color:rgba(255,255,255,.4);transition:all .3s}
@@ -32,13 +32,18 @@ header span{color:var(--accent);font-size:.85rem;font-weight:400}
 .line.done{background:var(--accent)}
 
 /* ---- MAIN ---- */
-main{flex:1;max-width:1060px;width:100%;margin:0 auto;padding:2rem}
+main{flex:1;max-width:1120px;width:100%;margin:0 auto;padding:2rem 2rem 6rem}
 .step-section{display:none;animation:fadeIn .35s ease}
 .step-section.visible{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 h2{font-size:1.35rem;margin-bottom:.25rem}
 .subtitle{color:#666;margin-bottom:1.5rem;font-size:.95rem}
+
+/* ---- STICKY BOTTOM BAR ---- */
+.sticky-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid #ddd;padding:.75rem 2rem;display:flex;justify-content:center;gap:.75rem;z-index:40;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.sticky-bottom .inner{max-width:1120px;width:100%;display:flex;gap:.75rem;align-items:center}
+.sticky-bottom .spacer{flex:1}
 
 /* ---- STEP 1: Categories & Cards ---- */
 .category-section{margin-bottom:1.75rem}
@@ -54,26 +59,58 @@ h2{font-size:1.35rem;margin-bottom:.25rem}
 .doc-card .coming-soon{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:#e0e0e0;color:#777;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 .doc-card .active-badge{position:absolute;top:.55rem;right:.55rem;font-size:.6rem;background:var(--accent);color:var(--dark);padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 
-/* ---- TWO-COL (Step 2) ---- */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-.col-head{font-weight:700;font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between}
-.field-list{list-style:none}
-.field-list li{padding:.45rem 0;display:flex;align-items:center;gap:.5rem;font-size:.9rem}
-.field-list li label{cursor:pointer;display:flex;align-items:center;gap:.5rem;flex:1}
-.field-list li .badge{font-size:.65rem;background:var(--accent);color:var(--dark);padding:1px 6px;border-radius:var(--radius-sm);font-weight:700}
+/* ---- STEP 2: Grouped fields ---- */
+.field-group{background:var(--white);border:1px solid #ddd;border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden}
+.field-group-header{padding:.8rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:.9rem;user-select:none;background:#fafbfa;border-bottom:1px solid #eee}
+.field-group-header:hover{background:#f2f5f3}
+.field-group-header .arrow{transition:transform .2s;font-size:.7rem;color:#999}
+.field-group.open .arrow{transform:rotate(90deg)}
+.field-group-header .group-meta{display:flex;align-items:center;gap:.6rem}
+.field-group-header .group-count{font-size:.72rem;font-weight:400;color:#888;background:#eee;padding:2px 8px;border-radius:10px}
+.field-group-header .repeatable-badge{font-size:.62rem;background:#FFB84D;color:#fff;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase}
+.field-group-body{display:none;padding:0}
+.field-group.open .field-group-body{display:block}
 
-input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+/* Field table */
+.field-table{width:100%;border-collapse:collapse}
+.field-table th{text-align:left;font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;padding:.55rem 1rem;border-bottom:1px solid #eee;background:#fafbfa}
+.field-table td{padding:.6rem 1rem;border-bottom:1px solid #f3f3f3;font-size:.85rem;vertical-align:top}
+.field-table tr:last-child td{border-bottom:none}
+.field-table tr:hover{background:#f8faf9}
+.field-table .cb-cell{width:36px;text-align:center}
+.field-table .mandatory-cell{width:80px;text-align:center}
+.field-table .type-cell{width:90px}
+.field-table .auto-cell{width:80px;text-align:center}
 
-.pills-area{display:flex;flex-wrap:wrap;gap:.45rem;min-height:40px}
-.pill{background:var(--accent);color:var(--dark);font-size:.82rem;font-weight:600;padding:.3rem .7rem;border-radius:20px;display:inline-flex;align-items:center;gap:.35rem;animation:fadeIn .2s}
-.pill button{background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:var(--dark);opacity:.6}
-.pill button:hover{opacity:1}
+/* Type badges */
+.type-badge{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;white-space:nowrap}
+.type-badge.text{background:#E3F2FD;color:#1565C0}
+.type-badge.date{background:#F3E5F5;color:#7B1FA2}
+.type-badge.decimal,.type-badge.integer{background:#FFF3E0;color:#E65100}
+.type-badge.boolean{background:#E8F5E9;color:#2E7D32}
 
-.add-custom{margin-top:1rem;border-top:1px solid #e0e0e0;padding-top:1rem}
-.add-custom summary{cursor:pointer;font-size:.88rem;color:var(--accent);font-weight:600}
-.add-custom .inline-form{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
-.add-custom input{flex:1;min-width:120px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font)}
-.add-custom input:focus{outline:none;border-color:var(--accent)}
+/* Auto-extract indicator */
+.auto-yes{color:var(--accent);font-weight:700;font-size:.78rem}
+.auto-no{color:#bbb;font-size:.78rem}
+
+/* Mandatory toggle */
+.toggle-wrap{display:inline-flex;align-items:center;cursor:pointer}
+.toggle-track{width:34px;height:18px;border-radius:9px;background:#ddd;position:relative;transition:background .2s}
+.toggle-track.on{background:var(--accent)}
+.toggle-knob{width:14px;height:14px;border-radius:50%;background:var(--white);position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-track.on .toggle-knob{left:18px}
+
+/* Enum values */
+.enum-area{margin-top:.4rem}
+.enum-pills{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.3rem}
+.enum-pill{font-size:.72rem;padding:2px 8px;border-radius:10px;background:rgba(0,192,139,.1);border:1px solid rgba(0,192,139,.3);color:var(--text-dark);display:inline-flex;align-items:center;gap:.3rem}
+.enum-pill button{background:none;border:none;cursor:pointer;font-size:.85rem;color:#999;line-height:1;padding:0}
+.enum-pill button:hover{color:red}
+.enum-pill.custom-enum{background:rgba(255,184,77,.12);border-color:rgba(255,184,77,.4)}
+.enum-add{display:inline-flex;align-items:center;gap:.3rem}
+.enum-add input{width:120px;padding:2px 6px;border:1px solid #ccc;border-radius:var(--radius-sm);font-size:.75rem;font-family:var(--font)}
+.enum-add input:focus{outline:none;border-color:var(--accent)}
+.enum-add button{font-size:.72rem;padding:2px 8px;border:1px solid var(--accent);background:rgba(0,192,139,.08);color:var(--text-dark);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font)}
 
 /* ---- STEP 3 ---- */
 .field-rules{display:flex;flex-direction:column;gap:.6rem}
@@ -97,6 +134,7 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
 .custom-rule-tag .badge{font-size:.6rem;background:var(--accent);color:var(--dark);padding:1px 5px;border-radius:var(--radius-sm);font-weight:700}
 .custom-rule-tag button{background:none;border:none;cursor:pointer;color:#999;font-size:.9rem}
 .custom-rule-tag button:hover{color:red}
+.rule-header .mandatory-flag{font-size:.62rem;background:#FF6B6B;color:#fff;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;margin-left:.5rem}
 
 /* ---- SUMMARY ---- */
 .summary-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.75rem;margin-bottom:1.5rem}
@@ -104,33 +142,48 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
 .summary-card .doc-type{font-size:1.1rem;color:var(--accent);font-weight:700;margin-bottom:1.25rem}
 .summary-field{padding:.6rem 0;border-bottom:1px solid #eee}
 .summary-field:last-child{border-bottom:none}
-.summary-field h4{font-size:.92rem;margin-bottom:.25rem}
+.summary-field h4{font-size:.92rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.4rem}
 .summary-field ul{list-style:disc;padding-left:1.25rem}
 .summary-field li{font-size:.84rem;color:#444;padding:.15rem 0}
 .summary-field li .badge{font-size:.6rem;background:var(--accent);color:var(--dark);padding:1px 5px;border-radius:var(--radius-sm);font-weight:700;margin-left:.3rem}
+.summary-meta{display:flex;gap:1rem;margin-bottom:.35rem;flex-wrap:wrap}
+.summary-meta span{font-size:.78rem;color:#666}
+.summary-meta strong{color:var(--text-dark)}
+
+/* ---- BADGES / PILLS shared ---- */
+.badge{font-size:.65rem;background:var(--accent);color:var(--dark);padding:1px 6px;border-radius:var(--radius-sm);font-weight:700}
 
 /* ---- BUTTONS ---- */
 .btn{padding:.65rem 1.6rem;border:none;border-radius:var(--radius);font-family:var(--font);font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
 .btn-primary{background:var(--accent);color:var(--dark)}
 .btn-primary:hover{background:var(--lime)}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 .btn-secondary{background:transparent;border:2px solid var(--accent);color:var(--accent)}
 .btn-secondary:hover{background:rgba(0,192,139,.08)}
 .btn-sm{padding:.4rem 1rem;font-size:.82rem}
 .btn-group{display:flex;gap:.75rem;margin-top:1.75rem;flex-wrap:wrap}
+input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.pill{background:var(--accent);color:var(--dark);font-size:.82rem;font-weight:600;padding:.3rem .7rem;border-radius:20px;display:inline-flex;align-items:center;gap:.35rem;animation:fadeIn .2s}
+.pill button{background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:var(--dark);opacity:.6}
+.pill button:hover{opacity:1}
 
 /* ---- TOAST ---- */
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--dark);color:var(--white);padding:1rem 1.5rem;border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:.92rem;transform:translateY(120%);opacity:0;transition:all .35s ease;z-index:100;border-left:4px solid var(--accent)}
+.toast{position:fixed;bottom:5rem;right:2rem;background:var(--dark);color:var(--white);padding:1rem 1.5rem;border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:.92rem;transform:translateY(120%);opacity:0;transition:all .35s ease;z-index:100;border-left:4px solid var(--accent)}
 .toast.show{transform:translateY(0);opacity:1}
+
+/* Selection counter in sticky bar */
+.selection-count{font-size:.85rem;color:#666}
+.selection-count strong{color:var(--accent)}
 
 /* ---- RESPONSIVE ---- */
 @media(max-width:768px){
   header{padding:1rem}
-  main{padding:1.25rem}
-  .two-col{grid-template-columns:1fr}
+  main{padding:1.25rem 1rem 6rem}
   .doc-cards{grid-template-columns:1fr}
   .line{width:30px}
   .step-label{display:none}
+  .field-table th,.field-table td{padding:.45rem .5rem;font-size:.78rem}
+  .field-table .auto-cell,.field-table .type-cell{display:none}
 }
 </style>
 </head>
@@ -138,12 +191,14 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
 
 <header>
   <h1>Collect &amp; Conclude</h1>
-  <span>powered by Ohpen</span>
+  <span class="powered">powered by Ohpen</span>
 </header>
 
 <nav class="progress-bar" id="progressBar"></nav>
 
 <main id="app"></main>
+
+<div id="stickyBar"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -151,26 +206,22 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
 // ===== DOCUMENT TYPE CATEGORIES =====
 const CATEGORIES = [
   {
-    id: 'income-employment',
-    name: 'Income — Employment',
-    icon: '💼',
+    id: 'income-employment', name: 'Income \u2014 Employment', icon: '\uD83D\uDCBC',
     docs: [
       {id:'employer_statement',     name:'Employer Statement',                    desc:'Declaration of employment terms and income issued by the employer', enabled:false},
       {id:'employment_contract',    name:'Employment Contract',                   desc:'Formal agreement confirming employment terms between employer and employee', enabled:false},
       {id:'employment_history',     name:'Employment History Overview',           desc:'Summary of past employment positions and durations', enabled:false},
       {id:'salary',                 name:'Salary Slip',                           desc:'Monthly income statement issued by an employer detailing gross/net pay', enabled:true},
-      {id:'annual_income',           name:'Annual Income Statement',               desc:'Official statement of total income earned (up to 3 prior years)', enabled:false},
-      {id:'annual_salary',           name:'Annual Salary Overview',                desc:'Detailed salary breakdown per calendar year (up to 3 prior years)', enabled:false},
+      {id:'annual_income',          name:'Annual Income Statement',               desc:'Official statement of total income earned (up to 3 prior years)', enabled:false},
+      {id:'annual_salary',          name:'Annual Salary Overview',                desc:'Detailed salary breakdown per calendar year (up to 3 prior years)', enabled:false},
       {id:'perspective_statement',  name:'Future Income Perspective',             desc:'Employer projection of expected salary growth and career development', enabled:false},
-      {id:'future_salary_increase', name:'Confirmed Salary Increase',            desc:'Written confirmation of an upcoming salary raise with effective date', enabled:false},
-      {id:'result_key_ibl',         name:'Key Income Figure (IBL)',              desc:'Result key figure used in income-based lending calculations', enabled:false},
-      {id:'income_statement_ibl',   name:'Income Statement for Lending (IBL)',   desc:'Standardised income statement used for mortgage lending assessments', enabled:false}
+      {id:'future_salary_increase', name:'Confirmed Salary Increase',             desc:'Written confirmation of an upcoming salary raise with effective date', enabled:false},
+      {id:'result_key_ibl',         name:'Key Income Figure (IBL)',               desc:'Result key figure used in income-based lending calculations', enabled:false},
+      {id:'income_statement_ibl',   name:'Income Statement for Lending (IBL)',    desc:'Standardised income statement used for mortgage lending assessments', enabled:false}
     ]
   },
   {
-    id: 'income-benefits',
-    name: 'Income — Benefits, Annuities & Pension',
-    icon: '🏦',
+    id: 'income-benefits', name: 'Income \u2014 Benefits, Annuities & Pension', icon: '\uD83C\uDFE6',
     docs: [
       {id:'disability_current',   name:'Current Disability Benefit',              desc:'Ongoing social benefit payment for disability or incapacity', enabled:false},
       {id:'disability_conferment',name:'Disability Benefit Award Decision',       desc:'Official decision granting a social benefit for disability', enabled:false},
@@ -182,9 +233,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'collateral-existing',
-    name: 'Collateral — Existing Property',
-    icon: '🏠',
+    id: 'collateral-existing', name: 'Collateral \u2014 Existing Property', icon: '\uD83C\uDFE0',
     docs: [
       {id:'purchase_agreement',     name:'Purchase Agreement',                    desc:'Signed contract between buyer and seller for property purchase', enabled:false},
       {id:'purchase_agreement_land',name:'Land Purchase Agreement',               desc:'Contract for the purchase of a plot of land', enabled:false},
@@ -198,9 +247,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'collateral-new',
-    name: 'Collateral — New Construction',
-    icon: '🏗️',
+    id: 'collateral-new', name: 'Collateral \u2014 New Construction', icon: '\uD83C\uDFD7\uFE0F',
     docs: [
       {id:'construction_agreement', name:'Construction Agreement',                desc:'Contract for the construction of a new-build property', enabled:false},
       {id:'contracting_agreement',  name:'Contracting Agreement',                 desc:'Formal contracting agreement (aanneemovereenkomst) with a builder', enabled:false},
@@ -211,36 +258,30 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'income-self-employed',
-    name: 'Income — Self-Employed & Tax',
-    icon: '📊',
+    id: 'income-self-employed', name: 'Income \u2014 Self-Employed & Tax', icon: '\uD83D\uDCCA',
     docs: [
       {id:'income_business',        name:'Business Income Statement',             desc:'Profit & loss or income overview from self-employment or a business', enabled:false},
-      {id:'tax_return_y1',          name:'Income Tax Return (Year -1)',           desc:'Filed personal income tax return for the previous year', enabled:false},
-      {id:'tax_return_y2',          name:'Income Tax Return (Year -2)',           desc:'Filed personal income tax return for two years ago', enabled:false},
-      {id:'tax_return_y3',          name:'Income Tax Return (Year -3)',           desc:'Filed personal income tax return for three years ago', enabled:false},
+      {id:'tax_return_y1',          name:'Income Tax Return (Year -1)',            desc:'Filed personal income tax return for the previous year', enabled:false},
+      {id:'tax_return_y2',          name:'Income Tax Return (Year -2)',            desc:'Filed personal income tax return for two years ago', enabled:false},
+      {id:'tax_return_y3',          name:'Income Tax Return (Year -3)',            desc:'Filed personal income tax return for three years ago', enabled:false},
       {id:'tax_return_recent',      name:'Most Recent Tax Return',                desc:'The latest filed income tax return available', enabled:false},
       {id:'kvk_registration',       name:'Chamber of Commerce Registration',      desc:'Extract from the trade register confirming business registration', enabled:false}
     ]
   },
   {
-    id: 'identity-legal',
-    name: 'Identity, Legal & Formal',
-    icon: '📋',
+    id: 'identity-legal', name: 'Identity, Legal & Formal', icon: '\uD83D\uDCCB',
     docs: [
       {id:'identity_document',      name:'Identity Document',                     desc:'Passport, ID card or driving licence for identity verification', enabled:false},
       {id:'residence_permit',       name:'Residence Permit',                      desc:'Official permit granting the right to reside in the Netherlands', enabled:false},
-      {id:'gba_summary',            name:'Municipal Records Extract (GBA)',       desc:'Summary from the municipal personal records database', enabled:false},
-      {id:'authorization',          name:'Authorisation for Data Collection',     desc:'Signed consent allowing the collection and verification of personal data', enabled:false},
+      {id:'gba_summary',            name:'Municipal Records Extract (GBA)',        desc:'Summary from the municipal personal records database', enabled:false},
+      {id:'authorization',          name:'Authorisation for Data Collection',      desc:'Signed consent allowing the collection and verification of personal data', enabled:false},
       {id:'bank_guarantee',         name:'Bank Guarantee',                        desc:'Financial guarantee issued by a bank on behalf of the buyer', enabled:false},
       {id:'signed_offer',           name:'Signed Mortgage Offer',                 desc:'Mortgage offer that has been signed and accepted by the applicant', enabled:false},
       {id:'motivation_form',        name:'Motivation / Application Form',         desc:'Completed form explaining the purpose and background of the application', enabled:false}
     ]
   },
   {
-    id: 'loans-debts',
-    name: 'Loans, Credits & Residual Debts',
-    icon: '💳',
+    id: 'loans-debts', name: 'Loans, Credits & Residual Debts', icon: '\uD83D\uDCB3',
     docs: [
       {id:'redemption_proforma',    name:'Redemption Statement (Pro Forma)',      desc:'Estimated payoff amount for an existing mortgage or loan', enabled:false},
       {id:'redemption_credit',      name:'Credit Redemption Statement',           desc:'Pro forma redemption overview for a revolving or instalment credit', enabled:false},
@@ -256,9 +297,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'relationship-divorce',
-    name: 'Relationship & Divorce',
-    icon: '⚖️',
+    id: 'relationship-divorce', name: 'Relationship & Divorce', icon: '\u2696\uFE0F',
     docs: [
       {id:'divorce_decree',         name:'Divorce Decree',                        desc:'Court ruling officially dissolving the marriage', enabled:false},
       {id:'divorce_settlement',     name:'Divorce Settlement Agreement',          desc:'Agreed division of assets, debts and obligations between ex-partners', enabled:false},
@@ -268,70 +307,191 @@ const CATEGORIES = [
     ]
   },
   {
-    id: 'rental-housing',
-    name: 'Rental & Current Housing',
-    icon: '🔑',
+    id: 'rental-housing', name: 'Rental & Current Housing', icon: '\uD83D\uDD11',
     docs: [
       {id:'rental_agreements',      name:'Rental Agreements',                     desc:'Signed lease contracts for properties owned by the applicant', enabled:false},
       {id:'rent_agreement',         name:'Current Rental Agreement',              desc:'Active lease agreement for the applicant\'s current residence', enabled:false},
       {id:'rental_payments',        name:'Recent Rental Payment Proof',           desc:'Evidence of the most recent rental payments made or received', enabled:false},
       {id:'mortgage_costs_rental',  name:'Mortgage Costs for Rental Property',    desc:'Proof of mortgage expenses on a property that is being rented out', enabled:false},
       {id:'permission_to_rent',     name:'Permission to Rent Out Property',       desc:'Lender\'s or owner\'s consent to rent the property to a third party', enabled:false},
-      {id:'sale_current_object',    name:'Sale Agreement — Current Property',     desc:'Purchase contract for the sale of the applicant\'s current home', enabled:false}
+      {id:'sale_current_object',    name:'Sale Agreement \u2014 Current Property',desc:'Purchase contract for the sale of the applicant\'s current home', enabled:false}
     ]
   },
   {
-    id: 'other',
-    name: 'Other Documents',
-    icon: '📁',
+    id: 'other', name: 'Other Documents', icon: '\uD83D\uDCC1',
     docs: [
       {id:'other_income_proof',     name:'Proof of Other Income',                 desc:'Supporting document for miscellaneous income (e.g. annuity payments)', enabled:false}
     ]
   }
 ];
 
-// Flatten for lookups
 const ALL_DOCS = CATEGORIES.flatMap(c => c.docs);
 
-// ===== FIELDS (only Salary Slip is fully configured) =====
-const FIELDS = {
-  salary:[
-    {name:'Full name',type:'text'},{name:'Employer name',type:'text'},{name:'Employment number',type:'ref'},
-    {name:'Gross salary',type:'amount'},{name:'Net salary',type:'amount'},{name:'Holiday allowance',type:'amount'},
-    {name:'Payslip date',type:'date'},{name:'Payment date',type:'date'},{name:'IBAN',type:'ref'},
-    {name:'Tax identification number',type:'ref'},{name:'Pension contribution',type:'amount'},{name:'Contract type',type:'cat'}
-  ]
-};
+// ===== SALARY SLIP FIELD SCHEMA (from Excel) =====
+const SALARY_FIELD_GROUPS = [
+  {
+    group: 'Document Information', repeatable: false,
+    fields: [
+      {key:'BSNDetected', label:'BSN Detected', type:'Boolean', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Employee Details', repeatable: false,
+    fields: [
+      {key:'Prefixes',      label:'Name Prefixes',    type:'Text',    dta:true, enums:[]},
+      {key:'Surname',        label:'Surname',           type:'Text',    dta:true, enums:[]},
+      {key:'DateOfBirth',    label:'Date of Birth',     type:'Date',    dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Employee Address', repeatable: false,
+    fields: [
+      {key:'EmpPostalCode',        label:'Postal Code',           type:'Text',    dta:true, enums:[]},
+      {key:'EmpHouseNumber',       label:'House Number',          type:'Integer', dta:true, enums:[]},
+      {key:'EmpHouseNumberSuffix', label:'House Number Suffix',   type:'Text',    dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Employer Details', repeatable: false,
+    fields: [
+      {key:'EmployerName', label:'Employer Name', type:'Text', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Employer Address', repeatable: false,
+    fields: [
+      {key:'ErPostalCode',        label:'Postal Code',           type:'Text',    dta:true, enums:[]},
+      {key:'ErHouseNumber',       label:'House Number',          type:'Integer', dta:true, enums:[]},
+      {key:'ErHouseNumberSuffix', label:'House Number Suffix',   type:'Text',    dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Employment Details', repeatable: false,
+    fields: [
+      {key:'EmploymentNumber',      label:'Employment Number',         type:'Text', dta:true, enums:[]},
+      {key:'StartDateOfEmployment', label:'Employment Start Date',     type:'Date', dta:true, enums:[]},
+      {key:'EndDateOfEmployment',   label:'Employment End Date',       type:'Date', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Period', repeatable: false,
+    fields: [
+      {key:'Duration', label:'Income Period',   type:'Text',    dta:true, enums:['Per week','Per 4 weeks','Per month','Per year']},
+      {key:'Year',     label:'Year',            type:'Integer', dta:true, enums:[]},
+      {key:'Number',   label:'Period Number',   type:'Integer', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Salary', repeatable: false,
+    fields: [
+      {key:'Wage',            label:'Gross Salary',           type:'Decimal', dta:true, enums:[]},
+      {key:'IncomeBeforeTax', label:'Uniform Wage Concept',   type:'Decimal', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Salary \u2014 Cumulative', repeatable: false,
+    fields: [
+      {key:'CumWage',            label:'Cumulative Salary',                 type:'Decimal', dta:true, enums:[]},
+      {key:'CumIncomeBeforeTax', label:'Cumulative Uniform Wage Concept',   type:'Decimal', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Salary \u2014 Deductions', repeatable: true,
+    fields: [
+      {key:'DeductionType',   label:'Deduction Type',        type:'Text',    dta:false, enums:['Working hours reduction']},
+      {key:'DeductionAmount', label:'Deduction Amount',      type:'Decimal', dta:true,  enums:[]},
+      {key:'DeductionDesc',   label:'Deduction Description', type:'Text',    dta:true,  enums:[]}
+    ]
+  },
+  {
+    group: 'Payment Details', repeatable: false,
+    fields: [
+      {key:'NetIncome', label:'Net Income', type:'Decimal', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Payment', repeatable: true,
+    fields: [
+      {key:'PaymentAmount',  label:'Payment Amount',          type:'Decimal', dta:true, enums:[]},
+      {key:'AccountNumber',  label:'Account Number (IBAN)',   type:'Text',    dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Reference Data', repeatable: false,
+    fields: [
+      {key:'MinimumWage', label:'Minimum Wage', type:'Decimal', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Various', repeatable: false,
+    fields: [
+      {key:'EmployerLoanRedemption', label:'Employer Loan Redemption', type:'Decimal', dta:true, enums:[]},
+      {key:'DistraintOnWages',       label:'Distraint on Wages',       type:'Decimal', dta:true, enums:[]}
+    ]
+  },
+  {
+    group: 'Manual Validations', repeatable: false,
+    fields: [
+      {key:'IsSalaryDeductions', label:'Has Salary Deductions', type:'Boolean', dta:false, enums:[]}
+    ]
+  }
+];
 
+// Validation rules per field type
 const RULES = {
-  date:[
+  Date:[
     'Must not be more than 1 month in the past','Must not be more than 3 months in the past',
     'Must not be more than 6 months in the past','Must not be a future date','Must be within the current calendar year'
   ],
-  amount:[
+  Decimal:[
     'Must be greater than 0','Must be greater than \u20ac1,000','Must be greater than \u20ac10,000',
-    'Net must be less than gross (cross-field rule)','Forced sale value must be less than market value (cross-field rule)'
+    'Net must be less than gross (cross-field rule)'
   ],
-  text:[
-    'Must not be empty','Must match across documents (e.g. name on salary slip matches name on contract)'
+  Integer:[
+    'Must be greater than 0','Must be a whole number'
   ],
-  ref:[
-    'Must not be empty','Must match expected format (IBAN format, NL tax ID format, etc.)'
+  Text:[
+    'Must not be empty','Must match across documents (e.g. name on salary slip matches name on contract)',
+    'Must match expected format'
   ],
-  cat:[
-    'Must be one of the allowed values','Must be "permanent" (for contract type)'
+  Boolean:[
+    'Must be true','Must be false'
   ]
 };
 
 // ===== STATE =====
-let state = {step:1, docType:null, fields:[], customFields:[], selectedFields:[], fieldRules:{}, fieldCustomRules:{}};
+let state = {
+  step: 1,
+  docType: null,
+  // Step 2: keyed by field key
+  selectedFields: {},   // key -> true
+  mandatoryFields: {},  // key -> true
+  customEnums: {},      // key -> [string]
+  // Step 3
+  fieldRules: {},       // key -> [rule string]
+  fieldCustomRules: {}  // key -> [rule string]
+};
 
 const STEPS = [{n:1,label:'Document type'},{n:2,label:'Configure fields'},{n:3,label:'Validation rules'}];
 
+// ===== HELPERS =====
+function getSelectedCount(){
+  return Object.keys(state.selectedFields).filter(k => state.selectedFields[k]).length;
+}
+
+function getAllSelectedFieldObjects(){
+  const result = [];
+  SALARY_FIELD_GROUPS.forEach(g => {
+    g.fields.forEach(f => {
+      if(state.selectedFields[f.key]) result.push({...f, group: g.group});
+    });
+  });
+  return result;
+}
+
 // ===== RENDER =====
 function renderProgress(){
-  const bar = document.getElementById('progressBar');
-  bar.innerHTML = STEPS.map((s,i)=>{
+  document.getElementById('progressBar').innerHTML = STEPS.map((s,i)=>{
     const cls = s.n < state.step ? 'done' : s.n === state.step ? 'active' : '';
     const lineCls = s.n < state.step ? 'done' : '';
     return `<div class="step-ind">
@@ -349,6 +509,7 @@ function render(){
   else if(state.step===2) renderStep2(app);
   else if(state.step===3) renderStep3(app);
   else renderSummary(app);
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // --- STEP 1 ---
@@ -362,32 +523,30 @@ function renderStep1(el){
       <div class="category-header"><span class="cat-icon">${cat.icon}</span> ${cat.name}</div>
       <div class="doc-cards">`;
     cat.docs.forEach(d => {
-      const isEnabled = d.enabled;
-      const isSelected = state.docType === d.id;
-      const cardClass = isSelected ? 'doc-card selected' : (isEnabled ? 'doc-card' : 'doc-card disabled');
-      const badge = isEnabled
-        ? '<span class="active-badge">Active</span>'
-        : '<span class="coming-soon">Coming soon</span>';
-      html += `<div class="${cardClass}" data-id="${d.id}" data-enabled="${isEnabled}">
-        ${badge}
-        <h3>${d.name}</h3>
-        <p>${d.desc}</p>
+      const sel = state.docType === d.id;
+      const cls = sel ? 'doc-card selected' : (d.enabled ? 'doc-card' : 'doc-card disabled');
+      const badge = d.enabled ? '<span class="active-badge">Active</span>' : '<span class="coming-soon">Coming soon</span>';
+      html += `<div class="${cls}" data-id="${d.id}">
+        ${badge}<h3>${d.name}</h3><p>${d.desc}</p>
       </div>`;
     });
     html += `</div></div>`;
   });
 
-  html += `<div class="btn-group">
-    <button class="btn btn-primary" id="nextBtn" ${!state.docType?'disabled':''}>Next</button>
-  </div>`;
-
   el.innerHTML = html;
+
+  // Sticky bar
+  document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
+    <span class="selection-count">${state.docType ? 'Selected: <strong>' + ALL_DOCS.find(d=>d.id===state.docType).name + '</strong>' : 'No document selected'}</span>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" id="nextBtn" ${!state.docType?'disabled':''}>Next \u2192</button>
+  </div></div>`;
 
   el.querySelectorAll('.doc-card:not(.disabled)').forEach(c => c.addEventListener('click', () => {
     state.docType = c.dataset.id;
-    state.fields = (FIELDS[state.docType] || []).map(f => ({...f}));
-    state.customFields = [];
-    state.selectedFields = [];
+    state.selectedFields = {};
+    state.mandatoryFields = {};
+    state.customEnums = {};
     state.fieldRules = {};
     state.fieldCustomRules = {};
     render();
@@ -401,109 +560,179 @@ function renderStep1(el){
 // --- STEP 2 ---
 function renderStep2(el){
   const doc = ALL_DOCS.find(d => d.id === state.docType);
-  const allFields = [...state.fields, ...state.customFields];
-  el.innerHTML = `
-    <h2>Configure fields</h2>
-    <p class="subtitle">Select the fields you want to extract from the <strong>${doc.name}</strong>.</p>
-    <div class="two-col">
-      <div>
-        <div class="col-head">Available fields</div>
-        <ul class="field-list" id="fieldList">${allFields.map((f,i) => {
-          const checked = state.selectedFields.includes(f.name) ? 'checked' : '';
-          const badge = f.custom ? ' <span class="badge">custom</span>' : '';
-          return `<li><label><input type="checkbox" data-name="${f.name}" ${checked}>${f.name}${badge}</label></li>`;
-        }).join('')}</ul>
-        <details class="add-custom">
-          <summary>+ Add custom field</summary>
-          <div class="inline-form">
-            <input type="text" id="cfName" placeholder="Field name">
-            <input type="text" id="cfDesc" placeholder="Field description">
-            <button class="btn btn-primary btn-sm" id="addCfBtn">Add</button>
-          </div>
-        </details>
-      </div>
-      <div>
-        <div class="col-head">Selected fields <span style="font-weight:400;font-size:.82rem;color:#888">(${state.selectedFields.length})</span></div>
-        <div class="pills-area" id="pillsArea">${state.selectedFields.length === 0
-          ? '<span style="color:#aaa;font-size:.85rem">No fields selected yet</span>'
-          : state.selectedFields.map(n => `<span class="pill">${n}<button data-name="${n}">&times;</button></span>`).join('')}</div>
-      </div>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-secondary" id="backBtn">Back</button>
-      <button class="btn btn-primary" id="nextBtn" ${state.selectedFields.length===0?'disabled':''}>Next</button>
-    </div>`;
+  const selCount = getSelectedCount();
 
-  el.querySelectorAll('#fieldList input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const name = cb.dataset.name;
-      if(cb.checked){if(!state.selectedFields.includes(name)) state.selectedFields.push(name)}
-      else{state.selectedFields = state.selectedFields.filter(n => n !== name); delete state.fieldRules[name]; delete state.fieldCustomRules[name]}
-      render();
+  let html = `
+    <h2>Configure fields</h2>
+    <p class="subtitle">Select and configure the fields to extract from the <strong>${doc.name}</strong>. Toggle extraction and mandatory status per field.</p>`;
+
+  SALARY_FIELD_GROUPS.forEach((g, gi) => {
+    const groupFieldCount = g.fields.length;
+    const groupSelectedCount = g.fields.filter(f => state.selectedFields[f.key]).length;
+    html += `<div class="field-group open" data-gi="${gi}">
+      <div class="field-group-header" data-gi="${gi}">
+        <div class="group-meta">
+          <span>${g.group}</span>
+          ${g.repeatable ? '<span class="repeatable-badge">Repeatable</span>' : ''}
+          <span class="group-count">${groupSelectedCount} / ${groupFieldCount} selected</span>
+        </div>
+        <span class="arrow">\u25B6</span>
+      </div>
+      <div class="field-group-body">
+        <table class="field-table">
+          <thead><tr>
+            <th class="cb-cell">Extract</th>
+            <th>Field</th>
+            <th class="type-cell">Type</th>
+            <th class="auto-cell">Auto</th>
+            <th class="mandatory-cell">Required</th>
+          </tr></thead>
+          <tbody>`;
+
+    g.fields.forEach(f => {
+      const isSelected = !!state.selectedFields[f.key];
+      const isMandatory = !!state.mandatoryFields[f.key];
+      const allEnums = [...(f.enums || []), ...(state.customEnums[f.key] || [])];
+      const typeLower = f.type.toLowerCase();
+
+      html += `<tr>
+        <td class="cb-cell"><input type="checkbox" data-key="${f.key}" class="field-cb" ${isSelected?'checked':''}></td>
+        <td>
+          <div style="font-weight:600;margin-bottom:.15rem">${f.label}</div>`;
+
+      // Show enums if any
+      if(allEnums.length > 0 || f.enums !== undefined){
+        html += `<div class="enum-area"><div class="enum-pills">`;
+        (f.enums || []).forEach(ev => {
+          html += `<span class="enum-pill">${ev}</span>`;
+        });
+        (state.customEnums[f.key] || []).forEach((ev, ei) => {
+          html += `<span class="enum-pill custom-enum">${ev}<button data-key="${f.key}" data-ei="${ei}" class="remove-enum">&times;</button></span>`;
+        });
+        html += `</div>`;
+        html += `<div class="enum-add">
+          <input type="text" placeholder="Add value\u2026" data-key="${f.key}" class="enum-input">
+          <button data-key="${f.key}" class="add-enum-btn">+ Add</button>
+        </div>`;
+        html += `</div>`;
+      }
+
+      html += `</td>
+        <td class="type-cell"><span class="type-badge ${typeLower}">${f.type}</span></td>
+        <td class="auto-cell">${f.dta ? '<span class="auto-yes">Yes</span>' : '<span class="auto-no">No</span>'}</td>
+        <td class="mandatory-cell">
+          <label class="toggle-wrap" data-key="${f.key}">
+            <div class="toggle-track ${isMandatory && isSelected ? 'on' : ''}" data-key="${f.key}">
+              <div class="toggle-knob"></div>
+            </div>
+          </label>
+        </td>
+      </tr>`;
     });
+
+    html += `</tbody></table></div></div>`;
   });
-  el.querySelectorAll('#pillsArea button').forEach(b => {
-    b.addEventListener('click', () => {
-      const name = b.dataset.name;
-      state.selectedFields = state.selectedFields.filter(n => n !== name);
-      delete state.fieldRules[name]; delete state.fieldCustomRules[name];
-      render();
-    });
-  });
-  document.getElementById('addCfBtn').addEventListener('click', () => {
-    const name = document.getElementById('cfName').value.trim();
-    if(!name) return;
-    if([...state.fields,...state.customFields].some(f => f.name === name)) return;
-    state.customFields.push({name, desc:document.getElementById('cfDesc').value.trim(), type:'text', custom:true});
+
+  el.innerHTML = html;
+
+  // Sticky bar
+  document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
+    <button class="btn btn-secondary" id="backBtn">\u2190 Back</button>
+    <span class="selection-count"><strong>${selCount}</strong> field${selCount!==1?'s':''} selected${selCount > 0 ? ', <strong>' + Object.keys(state.mandatoryFields).filter(k=>state.mandatoryFields[k]&&state.selectedFields[k]).length + '</strong> required' : ''}</span>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" id="nextBtn" ${selCount===0?'disabled':''}>Next \u2192</button>
+  </div></div>`;
+
+  // Group toggle
+  el.querySelectorAll('.field-group-header').forEach(h => h.addEventListener('click', () => {
+    h.parentElement.classList.toggle('open');
+  }));
+
+  // Field checkboxes
+  el.querySelectorAll('.field-cb').forEach(cb => cb.addEventListener('change', () => {
+    const key = cb.dataset.key;
+    if(cb.checked) state.selectedFields[key] = true;
+    else { delete state.selectedFields[key]; delete state.mandatoryFields[key]; delete state.fieldRules[key]; delete state.fieldCustomRules[key]; }
     render();
-  });
+  }));
+
+  // Mandatory toggles
+  el.querySelectorAll('.toggle-track').forEach(t => t.addEventListener('click', (e) => {
+    e.preventDefault();
+    const key = t.dataset.key;
+    if(!state.selectedFields[key]) return; // must be selected first
+    if(state.mandatoryFields[key]) delete state.mandatoryFields[key];
+    else state.mandatoryFields[key] = true;
+    render();
+  }));
+
+  // Add enum
+  el.querySelectorAll('.add-enum-btn').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    const input = el.querySelector(`.enum-input[data-key="${key}"]`);
+    const val = input.value.trim();
+    if(!val) return;
+    if(!state.customEnums[key]) state.customEnums[key] = [];
+    if(!state.customEnums[key].includes(val)){
+      state.customEnums[key].push(val);
+      render();
+    }
+  }));
+
+  // Remove custom enum
+  el.querySelectorAll('.remove-enum').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    const ei = parseInt(btn.dataset.ei);
+    state.customEnums[key].splice(ei, 1);
+    render();
+  }));
+
   document.getElementById('backBtn').addEventListener('click', () => {state.step = 1; render()});
-  document.getElementById('nextBtn').addEventListener('click', () => {if(state.selectedFields.length){state.step = 3; render()}});
+  document.getElementById('nextBtn').addEventListener('click', () => {if(getSelectedCount()>0){state.step = 3; render()}});
 }
 
 // --- STEP 3 ---
-function getFieldType(name){
-  const all = [...state.fields,...state.customFields];
-  const f = all.find(x => x.name === name);
-  return f ? f.type : 'text';
-}
-
 function renderStep3(el){
+  const selectedFields = getAllSelectedFieldObjects();
+
   el.innerHTML = `
     <h2>Configure validation rules</h2>
     <p class="subtitle">Add validation rules for each selected field.</p>
-    <div class="field-rules" id="fieldRules">${state.selectedFields.map(name => {
-      const type = getFieldType(name);
-      const rules = RULES[type] || RULES.text;
-      const active = state.fieldRules[name] || [];
-      const customs = state.fieldCustomRules[name] || [];
-      const isCustomField = state.customFields.some(f => f.name === name);
-      return `<div class="rule-row" data-field="${name}">
+    <div class="field-rules">${selectedFields.map(f => {
+      const rules = RULES[f.type] || RULES.Text;
+      const active = state.fieldRules[f.key] || [];
+      const customs = state.fieldCustomRules[f.key] || [];
+      const isMandatory = !!state.mandatoryFields[f.key];
+      return `<div class="rule-row" data-field="${f.key}">
         <div class="rule-header">
-          <span>${name}${isCustomField ? ' <span class="badge" style="font-size:.6rem">custom</span>' : ''}</span>
+          <span>${f.label}${isMandatory ? '<span class="mandatory-flag">Required</span>' : ''}</span>
           <span class="arrow">\u25B6</span>
         </div>
         <div class="rule-body">
           ${rules.map(r => {
             const checked = active.includes(r) ? 'checked' : '';
-            return `<div class="rule-option"><input type="checkbox" data-field="${name}" data-rule="${r}" ${checked}><span>${r}</span></div>`;
+            return `<div class="rule-option"><input type="checkbox" data-field="${f.key}" data-rule="${r}" ${checked}><span>${r}</span></div>`;
           }).join('')}
-          ${active.length ? `<div class="active-rules">${active.map(r => `<span class="pill">${r}<button data-field="${name}" data-rule="${r}">&times;</button></span>`).join('')}</div>` : ''}
-          ${customs.length ? `<div class="custom-rule-list">${customs.map((r,i) => `<div class="custom-rule-tag"><span class="badge">custom</span><span>${r}</span><button data-field="${name}" data-ci="${i}">&times;</button></div>`).join('')}</div>` : ''}
+          ${active.length ? `<div class="active-rules">${active.map(r => `<span class="pill">${r}<button data-field="${f.key}" data-rule="${r}">&times;</button></span>`).join('')}</div>` : ''}
+          ${customs.length ? `<div class="custom-rule-list">${customs.map((r,i) => `<div class="custom-rule-tag"><span class="badge">custom</span><span>${r}</span><button data-field="${f.key}" data-ci="${i}">&times;</button></div>`).join('')}</div>` : ''}
           <details class="custom-rule-area">
             <summary>+ Add custom rule</summary>
-            <textarea placeholder="Describe the validation rule in plain language\u2026" data-field="${name}"></textarea>
-            <button class="btn btn-primary btn-sm" style="margin-top:.4rem" data-addcr="${name}">Add rule</button>
+            <textarea placeholder="Describe the validation rule in plain language\u2026" data-field="${f.key}"></textarea>
+            <button class="btn btn-primary btn-sm" style="margin-top:.4rem" data-addcr="${f.key}">Add rule</button>
           </details>
         </div>
       </div>`;
-    }).join('')}</div>
-    <div class="btn-group">
-      <button class="btn btn-secondary" id="backBtn">Back</button>
-      <button class="btn btn-primary" id="nextBtn">Review configuration</button>
-    </div>`;
+    }).join('')}</div>`;
+
+  // Sticky bar
+  document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
+    <button class="btn btn-secondary" id="backBtn">\u2190 Back</button>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" id="nextBtn">Review configuration \u2192</button>
+  </div></div>`;
 
   el.querySelectorAll('.rule-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+
   el.querySelectorAll('.rule-option input').forEach(cb => cb.addEventListener('change', () => {
     const f = cb.dataset.field, r = cb.dataset.rule;
     if(!state.fieldRules[f]) state.fieldRules[f] = [];
@@ -511,18 +740,19 @@ function renderStep3(el){
     else{state.fieldRules[f] = state.fieldRules[f].filter(x => x !== r)}
     render(); openRow(f);
   }));
+
   el.querySelectorAll('.active-rules button').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    const f = b.dataset.field, r = b.dataset.rule;
-    state.fieldRules[f] = state.fieldRules[f].filter(x => x !== r);
-    render(); openRow(f);
+    state.fieldRules[b.dataset.field] = state.fieldRules[b.dataset.field].filter(x => x !== b.dataset.rule);
+    render(); openRow(b.dataset.field);
   }));
+
   el.querySelectorAll('.custom-rule-list button').forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
-    const f = b.dataset.field, i = parseInt(b.dataset.ci);
-    state.fieldCustomRules[f].splice(i, 1);
-    render(); openRow(f);
+    state.fieldCustomRules[b.dataset.field].splice(parseInt(b.dataset.ci), 1);
+    render(); openRow(b.dataset.field);
   }));
+
   el.querySelectorAll('[data-addcr]').forEach(btn => btn.addEventListener('click', () => {
     const f = btn.dataset.addcr;
     const ta = el.querySelector(`textarea[data-field="${f}"]`);
@@ -537,14 +767,16 @@ function renderStep3(el){
   document.getElementById('nextBtn').addEventListener('click', () => {state.step = 4; render()});
 }
 
-function openRow(fieldName){
-  const row = document.querySelector(`.rule-row[data-field="${fieldName}"]`);
+function openRow(fieldKey){
+  const row = document.querySelector(`.rule-row[data-field="${fieldKey}"]`);
   if(row) row.classList.add('open');
 }
 
 // --- SUMMARY ---
 function renderSummary(el){
   const doc = ALL_DOCS.find(d => d.id === state.docType);
+  const selectedFields = getAllSelectedFieldObjects();
+
   el.innerHTML = `
     <h2>Configuration summary</h2>
     <p class="subtitle">Review your extraction and validation configuration.</p>
@@ -552,29 +784,41 @@ function renderSummary(el){
       <h3>Document type</h3>
       <div class="doc-type">${doc.name}</div>
       <h3 style="margin-bottom:.75rem">Configured fields &amp; rules</h3>
-      ${state.selectedFields.map(name => {
-        const rules = state.fieldRules[name] || [];
-        const customs = state.fieldCustomRules[name] || [];
-        const isCustom = state.customFields.some(f => f.name === name);
+      ${selectedFields.map(f => {
+        const rules = state.fieldRules[f.key] || [];
+        const customs = state.fieldCustomRules[f.key] || [];
+        const isMandatory = !!state.mandatoryFields[f.key];
+        const allEnums = [...(f.enums||[]), ...(state.customEnums[f.key]||[])];
         return `<div class="summary-field">
-          <h4>${name}${isCustom ? ' <span class="badge">custom</span>' : ''}</h4>
+          <h4>${f.label}
+            <span class="type-badge ${f.type.toLowerCase()}">${f.type}</span>
+            ${isMandatory ? '<span style="font-size:.62rem;background:#FF6B6B;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700">REQUIRED</span>' : ''}
+            ${f.dta ? '<span style="font-size:.62rem;background:var(--accent);color:var(--dark);padding:2px 7px;border-radius:4px;font-weight:700">AUTO-EXTRACT</span>' : ''}
+          </h4>
+          <div class="summary-meta">
+            <span>Group: <strong>${f.group}</strong></span>
+            ${allEnums.length ? '<span>Allowed values: <strong>' + allEnums.join(', ') + '</strong></span>' : ''}
+          </div>
           ${rules.length || customs.length ? `<ul>
             ${rules.map(r => `<li>${r}</li>`).join('')}
             ${customs.map(r => `<li>${r}<span class="badge">custom</span></li>`).join('')}
           </ul>` : '<p style="font-size:.84rem;color:#999;margin-top:.15rem">No validation rules configured</p>'}
         </div>`;
       }).join('')}
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-secondary" id="backBtn">Back</button>
-      <button class="btn btn-primary" id="saveBtn">Save configuration</button>
-      <button class="btn btn-secondary" id="resetBtn">Start new configuration</button>
     </div>`;
+
+  // Sticky bar
+  document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
+    <button class="btn btn-secondary" id="backBtn">\u2190 Back</button>
+    <span class="spacer"></span>
+    <button class="btn btn-primary" id="saveBtn">Save configuration</button>
+    <button class="btn btn-secondary" id="resetBtn">Start new configuration</button>
+  </div></div>`;
 
   document.getElementById('backBtn').addEventListener('click', () => {state.step = 3; render()});
   document.getElementById('saveBtn').addEventListener('click', () => showToast('Configuration saved successfully!'));
   document.getElementById('resetBtn').addEventListener('click', () => {
-    state = {step:1, docType:null, fields:[], customFields:[], selectedFields:[], fieldRules:{}, fieldCustomRules:{}};
+    state = {step:1, docType:null, selectedFields:{}, mandatoryFields:{}, customEnums:{}, fieldRules:{}, fieldCustomRules:{}};
     render();
   });
 }
