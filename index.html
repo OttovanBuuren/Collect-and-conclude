@@ -522,14 +522,14 @@ function renderProgress(){
   }).join('');
 }
 
-function render(){
+function render(scrollToTop){
   renderProgress();
   const app = document.getElementById('app');
   if(state.step===1) renderStep1(app);
   else if(state.step===2) renderStep2(app);
   else if(state.step===3) renderStep3(app);
   else renderSummary(app);
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(scrollToTop) window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // --- STEP 1 ---
@@ -574,7 +574,34 @@ function renderStep1(el){
   }));
 
   document.getElementById('nextBtn').addEventListener('click', () => {
-    if(state.docType){state.step = 2; render();}
+    if(state.docType){state.step = 2; render(true);}
+  });
+}
+
+// --- STEP 2 helpers for lightweight updates ---
+function updateStep2StickyBar(){
+  const selCount = getSelectedCount();
+  const mandCount = Object.keys(state.mandatoryFields).filter(k => state.mandatoryFields[k] && state.selectedFields[k]).length;
+  const bar = document.getElementById('stickyBar');
+  if(!bar) return;
+  const countEl = bar.querySelector('.selection-count');
+  if(countEl) countEl.innerHTML = `<strong>${selCount}</strong> field${selCount!==1?'s':''} selected${selCount > 0 ? ', <strong>' + mandCount + '</strong> mandatory' : ''}`;
+  const nextBtn = document.getElementById('nextBtn');
+  if(nextBtn) nextBtn.disabled = selCount === 0;
+}
+
+function updateGroupCounts(){
+  document.querySelectorAll('.field-group').forEach(grp => {
+    const gi = grp.dataset.gi;
+    if(gi === undefined) return;
+    const g = SALARY_FIELD_GROUPS[gi];
+    if(!g) return;
+    const customFields = state.customGroupFields[gi] || [];
+    const allFields = [...g.fields, ...customFields];
+    const total = allFields.length;
+    const selected = allFields.filter(f => state.selectedFields[f.key]).length;
+    const countEl = grp.querySelector('.group-count');
+    if(countEl) countEl.textContent = `${selected} / ${total} selected`;
   });
 }
 
@@ -687,7 +714,7 @@ function renderStep2(el){
   // Sticky bar
   document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
     <button class="btn btn-secondary" id="backBtn">\u2190 Back</button>
-    <span class="selection-count"><strong>${selCount}</strong> field${selCount!==1?'s':''} selected${selCount > 0 ? ', <strong>' + Object.keys(state.mandatoryFields).filter(k=>state.mandatoryFields[k]&&state.selectedFields[k]).length + '</strong> required' : ''}</span>
+    <span class="selection-count"><strong>${selCount}</strong> field${selCount!==1?'s':''} selected${selCount > 0 ? ', <strong>' + Object.keys(state.mandatoryFields).filter(k=>state.mandatoryFields[k]&&state.selectedFields[k]).length + '</strong> mandatory' : ''}</span>
     <span class="spacer"></span>
     <button class="btn btn-primary" id="nextBtn" ${selCount===0?'disabled':''}>Next \u2192</button>
   </div></div>`;
@@ -697,22 +724,38 @@ function renderStep2(el){
     h.parentElement.classList.toggle('open');
   }));
 
-  // Field checkboxes
+  // Field checkboxes — update state + refresh sticky bar without full re-render
   el.querySelectorAll('.field-cb').forEach(cb => cb.addEventListener('change', () => {
     const key = cb.dataset.key;
-    if(cb.checked) state.selectedFields[key] = true;
-    else { delete state.selectedFields[key]; delete state.mandatoryFields[key]; delete state.fieldRules[key]; delete state.fieldCustomRules[key]; }
-    render();
+    if(cb.checked) {
+      state.selectedFields[key] = true;
+    } else {
+      delete state.selectedFields[key];
+      delete state.mandatoryFields[key];
+      delete state.fieldRules[key];
+      delete state.fieldCustomRules[key];
+      // Reset the mandatory toggle visually
+      const track = el.querySelector(`.toggle-track[data-key="${key}"]`);
+      if(track) track.classList.remove('on');
+    }
+    updateStep2StickyBar();
+    updateGroupCounts();
   }));
 
-  // Mandatory toggles
+  // Mandatory toggles — direct DOM toggle, no re-render
   el.querySelectorAll('.toggle-track').forEach(t => t.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const key = t.dataset.key;
-    if(!state.selectedFields[key]) return; // must be selected first
-    if(state.mandatoryFields[key]) delete state.mandatoryFields[key];
-    else state.mandatoryFields[key] = true;
-    render();
+    if(!state.selectedFields[key]) return;
+    if(state.mandatoryFields[key]) {
+      delete state.mandatoryFields[key];
+      t.classList.remove('on');
+    } else {
+      state.mandatoryFields[key] = true;
+      t.classList.add('on');
+    }
+    updateStep2StickyBar();
   }));
 
   // Add enum
@@ -765,8 +808,8 @@ function renderStep2(el){
     render();
   }));
 
-  document.getElementById('backBtn').addEventListener('click', () => {state.step = 1; render()});
-  document.getElementById('nextBtn').addEventListener('click', () => {if(getSelectedCount()>0){state.step = 3; render()}});
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 1; render(true)});
+  document.getElementById('nextBtn').addEventListener('click', () => {if(getSelectedCount()>0){state.step = 3; render(true)}});
 }
 
 // --- STEP 3 ---
@@ -841,8 +884,8 @@ function renderStep3(el){
     render(); openRow(f);
   }));
 
-  document.getElementById('backBtn').addEventListener('click', () => {state.step = 2; render()});
-  document.getElementById('nextBtn').addEventListener('click', () => {state.step = 4; render()});
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 2; render(true)});
+  document.getElementById('nextBtn').addEventListener('click', () => {state.step = 4; render(true)});
 }
 
 function openRow(fieldKey){
@@ -893,11 +936,11 @@ function renderSummary(el){
     <button class="btn btn-secondary" id="resetBtn">Start new configuration</button>
   </div></div>`;
 
-  document.getElementById('backBtn').addEventListener('click', () => {state.step = 3; render()});
+  document.getElementById('backBtn').addEventListener('click', () => {state.step = 3; render(true)});
   document.getElementById('saveBtn').addEventListener('click', () => showToast('Configuration saved successfully!'));
   document.getElementById('resetBtn').addEventListener('click', () => {
     state = {step:1, docType:null, selectedFields:{}, mandatoryFields:{}, customEnums:{}, customGroupFields:{}, fieldRules:{}, fieldCustomRules:{}};
-    render();
+    render(true);
   });
 }
 
