@@ -457,12 +457,80 @@ const SALARY_FIELD_GROUPS = [
 ];
 
 // Validation rules per specific field (keyed by field key)
+// Focus on direct document-level checks that are functionally meaningful
 const FIELD_RULES = {
+  // Document Information
+  BSNDetected: [
+    'Check if the BSN (citizen service number) is present on the salary slip',
+    'Check if the BSN is redacted or masked for privacy compliance'
+  ],
+  // Employee Details
+  Prefixes: [
+    'Check if the name prefix contains only valid Dutch prefixes (e.g. van, de, van der)',
+    'Check if the prefix is consistent with the surname shown on the salary slip'
+  ],
+  Surname: [
+    'Check if the surname on the salary slip contains at least 2 characters',
+    'Check if the surname does not contain numeric characters'
+  ],
+  DateOfBirth: [
+    'Check if the date of birth indicates the employee is at least 15 years old',
+    'Check if the date of birth is not in the future'
+  ],
+  // Employee Address
+  EmpPostalCode: [
+    'Check if the postal code follows the Dutch format (4 digits + 2 letters)',
+    'Check if a postal code is present on the salary slip'
+  ],
+  EmpHouseNumber: [
+    'Check if the house number is a positive number',
+    'Check if the house number does not exceed 99999'
+  ],
+  EmpHouseNumberSuffix: [
+    'Check if the house number suffix contains only letters and/or digits (e.g. A, 2, bis)'
+  ],
+  // Employer Details
+  EmployerName: [
+    'Check if the employer name on the salary slip is not a person name (i.e. should be a company)',
+    'Check if the employer name contains at least 2 characters'
+  ],
+  // Employer Address
+  ErPostalCode: [
+    'Check if the employer postal code follows the Dutch format (4 digits + 2 letters)',
+    'Check if the employer postal code is present on the salary slip'
+  ],
+  ErHouseNumber: [
+    'Check if the employer house number is a positive number'
+  ],
+  ErHouseNumberSuffix: [
+    'Check if the employer house number suffix contains only letters and/or digits'
+  ],
+  // Employment Details
+  EmploymentNumber: [
+    'Check if employment number is not between 0 and 9 (i.e. must be a real reference)',
+    'Check if the employment number contains at least 2 characters'
+  ],
+  StartDateOfEmployment: [
+    'Check if the salary period lies after the employment start date',
+    'Check if the employment start date is not in the future'
+  ],
+  EndDateOfEmployment: [
+    'Check if the employment end date is after the employment start date',
+    'Check if the employment end date is not more than 50 years after the start date'
+  ],
   // Period
   Duration: [
     'Check if the stipulation for current income is at most 3 months older than the current date',
     'Check if the stipulation for current income is not in the future',
     'Check if the salary period lies after the employment start date'
+  ],
+  Year: [
+    'Check if the year on the salary slip is the current year or at most 1 year in the past',
+    'Check if the year is not in the future'
+  ],
+  Number: [
+    'Check if the period number is within the valid range for the income period (e.g. 1\u201312 for monthly)',
+    'Check if the period number is a positive number'
   ],
   // Salary
   Wage: [
@@ -470,15 +538,30 @@ const FIELD_RULES = {
     'Check if no 30% tax-free arrangement exists on the salary slip'
   ],
   IncomeBeforeTax: [
+    'Check if the uniform wage concept amount is not higher than the gross salary',
     'Check if no 30% tax-free arrangement exists on the salary slip'
   ],
   // Salary — Cumulative
   CumWage: [
-    'Check on salary slip if cumulative net wage is not higher than cumulative gross wage'
+    'Check if cumulative salary is not lower than the current period gross salary',
+    'Check if cumulative salary is consistent with the period number (e.g. cumulative \u2265 period \u00d7 gross)'
+  ],
+  CumIncomeBeforeTax: [
+    'Check if cumulative uniform wage concept is not lower than the current period value',
+    'Check if cumulative uniform wage concept does not exceed cumulative gross salary'
   ],
   // Salary — Deductions
   DeductionType: [
-    'Check if there is retention or distraint of wages on the payslip(s)'
+    'Check if there is retention or distraint of wages on the payslip(s)',
+    'Check if the deduction type is a recognised payroll deduction category'
+  ],
+  DeductionAmount: [
+    'Check if the deduction amount is a positive value',
+    'Check if the deduction amount does not exceed the gross salary'
+  ],
+  DeductionDesc: [
+    'Check if the deduction description provides a clear explanation of the deduction',
+    'Check if the deduction description is not identical to the deduction type'
   ],
   // Payment Details
   NetIncome: [
@@ -491,25 +574,27 @@ const FIELD_RULES = {
     'Check if payment is not in pound sterling or other foreign currency'
   ],
   AccountNumber: [
-    'Check if account number (IBAN) exists on salary slip'
+    'Check if account number (IBAN) exists on salary slip',
+    'Check if the IBAN starts with a valid country code (e.g. NL for Dutch accounts)'
   ],
-  // Employment Details
-  EmploymentNumber: [
-    'Check if employment number is not between 0 and 9 (i.e. must be a real reference)'
-  ],
-  StartDateOfEmployment: [
-    'Check if the salary period lies after the employment start date'
+  // Reference Data
+  MinimumWage: [
+    'Check if the minimum wage amount is consistent with the current Dutch statutory minimum wage',
+    'Check if the gross salary on the slip is not below the stated minimum wage'
   ],
   // Various
-  DistraintOnWages: [
-    'Check if there is retention or distraint of wages on the payslip(s)'
-  ],
   EmployerLoanRedemption: [
-    'Check if employer loan redemption amount is consistent with employment contract terms'
+    'Check if the employer loan redemption amount is a positive value',
+    'Check if the employer loan redemption does not exceed the net income'
+  ],
+  DistraintOnWages: [
+    'Check if there is retention or distraint of wages on the payslip(s)',
+    'Check if the distraint amount does not exceed the gross salary'
   ],
   // Manual Validations
   IsSalaryDeductions: [
-    'Check if there is retention or distraint of wages on the payslip(s)'
+    'Check if there is retention or distraint of wages on the payslip(s)',
+    'Check if the deductions flag is consistent with the deduction lines on the slip'
   ]
 };
 
