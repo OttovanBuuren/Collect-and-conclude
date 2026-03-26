@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collect &amp; Conclude — powered by Ohpen</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#13322B;--accent:#00C08B;--lime:#33FF99;--white:#FFFFFF;--text-dark:#13322B;
+  --radius:8px;--radius-sm:4px;--font:Arial,Helvetica,sans-serif;
+  --shadow:0 2px 8px rgba(0,0,0,.18);
+}
+html{font-size:16px}
+body{font-family:var(--font);background:#f4f6f5;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
+
+/* ---- HEADER ---- */
+header{background:var(--dark);padding:1.25rem 2rem;display:flex;align-items:baseline;gap:.6rem}
+header h1{color:var(--white);font-size:1.4rem;font-weight:700;letter-spacing:-.02em}
+header span{color:var(--accent);font-size:.85rem;font-weight:400}
+
+/* ---- PROGRESS ---- */
+.progress-bar{background:var(--dark);padding:.75rem 2rem 1.25rem;display:flex;justify-content:center;gap:0}
+.progress-bar .step-ind{display:flex;align-items:center}
+.progress-bar .step-ind:last-child .line{display:none}
+.step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;border:2px solid rgba(255,255,255,.25);color:rgba(255,255,255,.4);transition:all .3s}
+.step-circle.active{border-color:var(--accent);background:var(--accent);color:var(--dark)}
+.step-circle.done{border-color:var(--accent);background:transparent;color:var(--accent)}
+.step-label{margin-left:.5rem;font-size:.8rem;color:rgba(255,255,255,.4);white-space:nowrap;transition:color .3s}
+.step-label.active,.step-label.done{color:var(--white)}
+.line{width:60px;height:2px;background:rgba(255,255,255,.15);margin:0 .75rem;flex-shrink:0}
+.line.done{background:var(--accent)}
+
+/* ---- MAIN ---- */
+main{flex:1;max-width:960px;width:100%;margin:0 auto;padding:2rem}
+.step-section{display:none;animation:fadeIn .35s ease}
+.step-section.visible{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+h2{font-size:1.35rem;margin-bottom:.25rem}
+.subtitle{color:#666;margin-bottom:1.5rem;font-size:.95rem}
+
+/* ---- CARDS (Step 1) ---- */
+.doc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.doc-card{background:var(--white);border:2px solid #ddd;border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:all .2s}
+.doc-card:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.doc-card.selected{border-color:var(--accent);background:rgba(0,192,139,.07)}
+.doc-card h3{font-size:1.05rem;margin-bottom:.35rem}
+.doc-card p{font-size:.85rem;color:#555;line-height:1.45}
+
+/* ---- TWO-COL (Step 2) ---- */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+.col-head{font-weight:700;font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between}
+.field-list{list-style:none}
+.field-list li{padding:.45rem 0;display:flex;align-items:center;gap:.5rem;font-size:.9rem}
+.field-list li label{cursor:pointer;display:flex;align-items:center;gap:.5rem;flex:1}
+.field-list li .badge{font-size:.65rem;background:var(--accent);color:var(--dark);padding:1px 6px;border-radius:var(--radius-sm);font-weight:700}
+
+input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+
+.pills-area{display:flex;flex-wrap:wrap;gap:.45rem;min-height:40px}
+.pill{background:var(--accent);color:var(--dark);font-size:.82rem;font-weight:600;padding:.3rem .7rem;border-radius:20px;display:inline-flex;align-items:center;gap:.35rem;animation:fadeIn .2s}
+.pill button{background:none;border:none;cursor:pointer;font-size:1rem;line-height:1;color:var(--dark);opacity:.6}
+.pill button:hover{opacity:1}
+
+.add-custom{margin-top:1rem;border-top:1px solid #e0e0e0;padding-top:1rem}
+.add-custom summary{cursor:pointer;font-size:.88rem;color:var(--accent);font-weight:600}
+.add-custom .inline-form{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.add-custom input{flex:1;min-width:120px;padding:.45rem .6rem;border:1px solid #ccc;border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font)}
+.add-custom input:focus{outline:none;border-color:var(--accent)}
+
+/* ---- STEP 3 ---- */
+.field-rules{display:flex;flex-direction:column;gap:.6rem}
+.rule-row{background:var(--white);border:1px solid #ddd;border-radius:var(--radius);overflow:hidden}
+.rule-header{padding:.85rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:.92rem;user-select:none}
+.rule-header:hover{background:#fafafa}
+.rule-header .arrow{transition:transform .2s;font-size:.75rem;color:#999}
+.rule-row.open .arrow{transform:rotate(90deg)}
+.rule-body{padding:0 1rem 1rem;display:none}
+.rule-row.open .rule-body{display:block}
+.rule-option{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;font-size:.88rem}
+.rule-option input[type="checkbox"]{width:15px;height:15px}
+.active-rules{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.active-rules .pill{font-size:.78rem;padding:.2rem .6rem}
+.custom-rule-area{margin-top:.75rem;border-top:1px solid #eee;padding-top:.65rem}
+.custom-rule-area summary{font-size:.82rem;color:var(--accent);font-weight:600;cursor:pointer}
+.custom-rule-area textarea{width:100%;margin-top:.45rem;padding:.5rem;border:1px solid #ccc;border-radius:var(--radius-sm);font-family:var(--font);font-size:.85rem;resize:vertical;min-height:50px}
+.custom-rule-area textarea:focus{outline:none;border-color:var(--accent)}
+.custom-rule-list{margin-top:.5rem;display:flex;flex-direction:column;gap:.3rem}
+.custom-rule-tag{background:rgba(0,192,139,.1);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:.35rem .6rem;font-size:.82rem;display:flex;align-items:center;gap:.4rem}
+.custom-rule-tag .badge{font-size:.6rem;background:var(--accent);color:var(--dark);padding:1px 5px;border-radius:var(--radius-sm);font-weight:700}
+.custom-rule-tag button{background:none;border:none;cursor:pointer;color:#999;font-size:.9rem}
+.custom-rule-tag button:hover{color:red}
+
+/* ---- SUMMARY ---- */
+.summary-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.75rem;margin-bottom:1.5rem}
+.summary-card h3{font-size:1rem;margin-bottom:.15rem}
+.summary-card .doc-type{font-size:1.1rem;color:var(--accent);font-weight:700;margin-bottom:1.25rem}
+.summary-field{padding:.6rem 0;border-bottom:1px solid #eee}
+.summary-field:last-child{border-bottom:none}
+.summary-field h4{font-size:.92rem;margin-bottom:.25rem}
+.summary-field ul{list-style:disc;padding-left:1.25rem}
+.summary-field li{font-size:.84rem;color:#444;padding:.15rem 0}
+.summary-field li .badge{font-size:.6rem;background:var(--accent);color:var(--dark);padding:1px 5px;border-radius:var(--radius-sm);font-weight:700;margin-left:.3rem}
+
+/* ---- BUTTONS ---- */
+.btn{padding:.65rem 1.6rem;border:none;border-radius:var(--radius);font-family:var(--font);font-size:.92rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:var(--dark)}
+.btn-primary:hover{background:var(--lime)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:transparent;border:2px solid var(--accent);color:var(--accent)}
+.btn-secondary:hover{background:rgba(0,192,139,.08)}
+.btn-sm{padding:.4rem 1rem;font-size:.82rem}
+.btn-group{display:flex;gap:.75rem;margin-top:1.75rem;flex-wrap:wrap}
+
+/* ---- TOAST ---- */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--dark);color:var(--white);padding:1rem 1.5rem;border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:.92rem;transform:translateY(120%);opacity:0;transition:all .35s ease;z-index:100;border-left:4px solid var(--accent)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:768px){
+  header{padding:1rem}
+  main{padding:1.25rem}
+  .two-col{grid-template-columns:1fr}
+  .doc-cards{grid-template-columns:1fr}
+  .line{width:30px}
+  .step-label{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Collect &amp; Conclude</h1>
+  <span>powered by Ohpen</span>
+</header>
+
+<nav class="progress-bar" id="progressBar"></nav>
+
+<main id="app"></main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const DOC_TYPES = [
+  {id:'salary',name:'Salary slip',desc:'Monthly income statement issued by an employer'},
+  {id:'appraisal',name:'Appraisal report',desc:'Property valuation report issued by a certified appraiser'},
+  {id:'contract',name:'Employment contract',desc:'Formal agreement between employer and employee confirming employment terms'}
+];
+
+const FIELDS = {
+  salary:[
+    {name:'Full name',type:'text'},{name:'Employer name',type:'text'},{name:'Employment number',type:'ref'},
+    {name:'Gross salary',type:'amount'},{name:'Net salary',type:'amount'},{name:'Holiday allowance',type:'amount'},
+    {name:'Payslip date',type:'date'},{name:'Payment date',type:'date'},{name:'IBAN',type:'ref'},
+    {name:'Tax identification number',type:'ref'},{name:'Pension contribution',type:'amount'},{name:'Contract type',type:'cat'}
+  ],
+  appraisal:[
+    {name:'Property address',type:'text'},{name:'Appraiser name',type:'text'},{name:'Appraiser certification number',type:'ref'},
+    {name:'Valuation date',type:'date'},{name:'Market value',type:'amount'},{name:'Forced sale value',type:'amount'},
+    {name:'Property type',type:'cat'},{name:'Construction year',type:'text'},{name:'Floor area (m²)',type:'text'},
+    {name:'Energy label',type:'cat'},{name:'Valuation method',type:'text'},{name:'Report reference number',type:'ref'}
+  ],
+  contract:[
+    {name:'Employee full name',type:'text'},{name:'Employer name',type:'text'},{name:'Job title',type:'text'},
+    {name:'Department',type:'text'},{name:'Start date',type:'date'},{name:'Contract type (permanent / fixed-term)',type:'cat'},
+    {name:'End date (if applicable)',type:'date'},{name:'Gross monthly salary',type:'amount'},{name:'Probation period',type:'text'},
+    {name:'Notice period',type:'text'},{name:'Working hours per week',type:'text'},{name:'Workplace location',type:'text'}
+  ]
+};
+
+const RULES = {
+  date:[
+    'Must not be more than 1 month in the past','Must not be more than 3 months in the past',
+    'Must not be more than 6 months in the past','Must not be a future date','Must be within the current calendar year'
+  ],
+  amount:[
+    'Must be greater than 0','Must be greater than €1,000','Must be greater than €10,000',
+    'Net must be less than gross (cross-field rule)','Forced sale value must be less than market value (cross-field rule)'
+  ],
+  text:[
+    'Must not be empty','Must match across documents (e.g. name on salary slip matches name on contract)'
+  ],
+  ref:[
+    'Must not be empty','Must match expected format (IBAN format, NL tax ID format, etc.)'
+  ],
+  cat:[
+    'Must be one of the allowed values','Must be "permanent" (for contract type)'
+  ]
+};
+
+// ===== STATE =====
+let state = {step:1, docType:null, fields:[], customFields:[], selectedFields:[], fieldRules:{}, fieldCustomRules:{}};
+
+const STEPS = [{n:1,label:'Document type'},{n:2,label:'Configure fields'},{n:3,label:'Validation rules'}];
+
+// ===== RENDER =====
+function renderProgress(){
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = STEPS.map((s,i)=>{
+    const cls = s.n < state.step ? 'done' : s.n === state.step ? 'active' : '';
+    const lineCls = s.n < state.step ? 'done' : '';
+    return `<div class="step-ind">
+      <div class="step-circle ${cls}">${s.n < state.step ? '✓' : s.n}</div>
+      <div class="step-label ${cls}">${s.label}</div>
+      ${i < STEPS.length-1 ? `<div class="line ${lineCls}"></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  renderProgress();
+  const app = document.getElementById('app');
+  if(state.step===1) renderStep1(app);
+  else if(state.step===2) renderStep2(app);
+  else if(state.step===3) renderStep3(app);
+  else renderSummary(app);
+}
+
+// --- STEP 1 ---
+function renderStep1(el){
+  el.innerHTML = `
+    <h2>Select document type</h2>
+    <p class="subtitle">Choose the type of document you want to configure for data extraction.</p>
+    <div class="doc-cards">${DOC_TYPES.map(d=>`
+      <div class="doc-card ${state.docType===d.id?'selected':''}" data-id="${d.id}">
+        <h3>${d.name}</h3><p>${d.desc}</p>
+      </div>`).join('')}
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="nextBtn" ${!state.docType?'disabled':''}>Next</button>
+    </div>`;
+  el.querySelectorAll('.doc-card').forEach(c=>c.addEventListener('click',()=>{
+    state.docType = c.dataset.id;
+    state.fields = FIELDS[state.docType].map(f=>({...f}));
+    state.customFields = [];
+    state.selectedFields = [];
+    state.fieldRules = {};
+    state.fieldCustomRules = {};
+    render();
+  }));
+  document.getElementById('nextBtn').addEventListener('click',()=>{if(state.docType){state.step=2;render()}});
+}
+
+// --- STEP 2 ---
+function renderStep2(el){
+  const allFields = [...state.fields, ...state.customFields];
+  el.innerHTML = `
+    <h2>Configure fields</h2>
+    <p class="subtitle">Select the fields you want to extract from the <strong>${DOC_TYPES.find(d=>d.id===state.docType).name}</strong>.</p>
+    <div class="two-col">
+      <div>
+        <div class="col-head">Available fields</div>
+        <ul class="field-list" id="fieldList">${allFields.map((f,i)=>{
+          const checked = state.selectedFields.includes(f.name)?'checked':'';
+          const badge = f.custom ? ' <span class="badge">custom</span>' : '';
+          return `<li><label><input type="checkbox" data-name="${f.name}" ${checked}>${f.name}${badge}</label></li>`;
+        }).join('')}</ul>
+        <details class="add-custom">
+          <summary>+ Add custom field</summary>
+          <div class="inline-form">
+            <input type="text" id="cfName" placeholder="Field name">
+            <input type="text" id="cfDesc" placeholder="Field description">
+            <button class="btn btn-primary btn-sm" id="addCfBtn">Add</button>
+          </div>
+        </details>
+      </div>
+      <div>
+        <div class="col-head">Selected fields <span style="font-weight:400;font-size:.82rem;color:#888">(${state.selectedFields.length})</span></div>
+        <div class="pills-area" id="pillsArea">${state.selectedFields.length === 0 ? '<span style="color:#aaa;font-size:.85rem">No fields selected yet</span>' : state.selectedFields.map(n=>`<span class="pill">${n}<button data-name="${n}">&times;</button></span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" id="backBtn">Back</button>
+      <button class="btn btn-primary" id="nextBtn" ${state.selectedFields.length===0?'disabled':''}>Next</button>
+    </div>`;
+
+  el.querySelectorAll('#fieldList input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      const name = cb.dataset.name;
+      if(cb.checked){if(!state.selectedFields.includes(name)) state.selectedFields.push(name)}
+      else{state.selectedFields = state.selectedFields.filter(n=>n!==name); delete state.fieldRules[name]; delete state.fieldCustomRules[name]}
+      render();
+    });
+  });
+  el.querySelectorAll('#pillsArea button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const name = b.dataset.name;
+      state.selectedFields = state.selectedFields.filter(n=>n!==name);
+      delete state.fieldRules[name]; delete state.fieldCustomRules[name];
+      render();
+    });
+  });
+  document.getElementById('addCfBtn').addEventListener('click',()=>{
+    const name = document.getElementById('cfName').value.trim();
+    if(!name) return;
+    if([...state.fields,...state.customFields].some(f=>f.name===name)) return;
+    state.customFields.push({name,desc:document.getElementById('cfDesc').value.trim(),type:'text',custom:true});
+    render();
+  });
+  document.getElementById('backBtn').addEventListener('click',()=>{state.step=1;render()});
+  document.getElementById('nextBtn').addEventListener('click',()=>{if(state.selectedFields.length){state.step=3;render()}});
+}
+
+// --- STEP 3 ---
+function getFieldType(name){
+  const all = [...state.fields,...state.customFields];
+  const f = all.find(x=>x.name===name);
+  return f ? f.type : 'text';
+}
+
+function renderStep3(el){
+  el.innerHTML = `
+    <h2>Configure validation rules</h2>
+    <p class="subtitle">Add validation rules for each selected field.</p>
+    <div class="field-rules" id="fieldRules">${state.selectedFields.map(name=>{
+      const type = getFieldType(name);
+      const rules = RULES[type] || RULES.text;
+      const active = state.fieldRules[name] || [];
+      const customs = state.fieldCustomRules[name] || [];
+      const isCustomField = state.customFields.some(f=>f.name===name);
+      return `<div class="rule-row" data-field="${name}">
+        <div class="rule-header">
+          <span>${name}${isCustomField?' <span class="badge" style="font-size:.6rem">custom</span>':''}</span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="rule-body">
+          ${rules.map(r=>{
+            const checked = active.includes(r)?'checked':'';
+            return `<div class="rule-option"><input type="checkbox" data-field="${name}" data-rule="${r}" ${checked}><span>${r}</span></div>`;
+          }).join('')}
+          ${active.length?`<div class="active-rules">${active.map(r=>`<span class="pill">${r}<button data-field="${name}" data-rule="${r}">&times;</button></span>`).join('')}</div>`:''}
+          ${customs.length?`<div class="custom-rule-list">${customs.map((r,i)=>`<div class="custom-rule-tag"><span class="badge">custom</span><span>${r}</span><button data-field="${name}" data-ci="${i}">&times;</button></div>`).join('')}</div>`:''}
+          <details class="custom-rule-area">
+            <summary>+ Add custom rule</summary>
+            <textarea placeholder="Describe the validation rule in plain language…" data-field="${name}"></textarea>
+            <button class="btn btn-primary btn-sm" style="margin-top:.4rem" data-addcr="${name}">Add rule</button>
+          </details>
+        </div>
+      </div>`;
+    }).join('')}</div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" id="backBtn">Back</button>
+      <button class="btn btn-primary" id="nextBtn">Review configuration</button>
+    </div>`;
+
+  // Toggle expand
+  el.querySelectorAll('.rule-header').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+  // Rule checkboxes
+  el.querySelectorAll('.rule-option input').forEach(cb=>cb.addEventListener('change',()=>{
+    const f=cb.dataset.field, r=cb.dataset.rule;
+    if(!state.fieldRules[f]) state.fieldRules[f]=[];
+    if(cb.checked){if(!state.fieldRules[f].includes(r)) state.fieldRules[f].push(r)}
+    else{state.fieldRules[f]=state.fieldRules[f].filter(x=>x!==r)}
+    render(); openRow(f);
+  }));
+  // Remove rule pill
+  el.querySelectorAll('.active-rules button').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const f=b.dataset.field, r=b.dataset.rule;
+    state.fieldRules[f]=state.fieldRules[f].filter(x=>x!==r);
+    render(); openRow(f);
+  }));
+  // Remove custom rule
+  el.querySelectorAll('.custom-rule-list button').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const f=b.dataset.field, i=parseInt(b.dataset.ci);
+    state.fieldCustomRules[f].splice(i,1);
+    render(); openRow(f);
+  }));
+  // Add custom rule
+  el.querySelectorAll('[data-addcr]').forEach(btn=>btn.addEventListener('click',()=>{
+    const f=btn.dataset.addcr;
+    const ta=el.querySelector(`textarea[data-field="${f}"]`);
+    const v=ta.value.trim();
+    if(!v) return;
+    if(!state.fieldCustomRules[f]) state.fieldCustomRules[f]=[];
+    state.fieldCustomRules[f].push(v);
+    render(); openRow(f);
+  }));
+
+  document.getElementById('backBtn').addEventListener('click',()=>{state.step=2;render()});
+  document.getElementById('nextBtn').addEventListener('click',()=>{state.step=4;render()});
+}
+
+function openRow(fieldName){
+  const row = document.querySelector(`.rule-row[data-field="${fieldName}"]`);
+  if(row) row.classList.add('open');
+}
+
+// --- SUMMARY ---
+function renderSummary(el){
+  const docName = DOC_TYPES.find(d=>d.id===state.docType).name;
+  el.innerHTML = `
+    <h2>Configuration summary</h2>
+    <p class="subtitle">Review your extraction and validation configuration.</p>
+    <div class="summary-card">
+      <h3>Document type</h3>
+      <div class="doc-type">${docName}</div>
+      <h3 style="margin-bottom:.75rem">Configured fields &amp; rules</h3>
+      ${state.selectedFields.map(name=>{
+        const rules = state.fieldRules[name] || [];
+        const customs = state.fieldCustomRules[name] || [];
+        const isCustom = state.customFields.some(f=>f.name===name);
+        return `<div class="summary-field">
+          <h4>${name}${isCustom?' <span class="badge">custom</span>':''}</h4>
+          ${rules.length||customs.length ? `<ul>
+            ${rules.map(r=>`<li>${r}</li>`).join('')}
+            ${customs.map(r=>`<li>${r}<span class="badge">custom</span></li>`).join('')}
+          </ul>` : '<p style="font-size:.84rem;color:#999;margin-top:.15rem">No validation rules configured</p>'}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" id="backBtn">Back</button>
+      <button class="btn btn-primary" id="saveBtn">Save configuration</button>
+      <button class="btn btn-secondary" id="resetBtn">Start new configuration</button>
+    </div>`;
+
+  document.getElementById('backBtn').addEventListener('click',()=>{state.step=3;render()});
+  document.getElementById('saveBtn').addEventListener('click',()=>showToast('Configuration saved successfully!'));
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    state={step:1,docType:null,fields:[],customFields:[],selectedFields:[],fieldRules:{},fieldCustomRules:{}};
+    render();
+  });
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>
