@@ -77,10 +77,11 @@ h2{font-size:1.35rem;margin-bottom:.25rem}
 .field-table td{padding:.6rem 1rem;border-bottom:1px solid #f3f3f3;font-size:.85rem;vertical-align:top}
 .field-table tr:last-child td{border-bottom:none}
 .field-table tr:hover{background:#f8faf9}
-.field-table .cb-cell{width:36px;text-align:center}
-.field-table .mandatory-cell{width:80px;text-align:center}
+.field-table .cb-cell{width:50px;text-align:center}
+.field-table .name-cell{width:220px}
 .field-table .type-cell{width:90px}
-.field-table .auto-cell{width:80px;text-align:center}
+.field-table .mandatory-cell{width:90px;text-align:center}
+.field-table .auto-cell{width:160px;text-align:center}
 
 /* Type badges */
 .type-badge{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;white-space:nowrap}
@@ -183,7 +184,7 @@ input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;cursor:
   .line{width:30px}
   .step-label{display:none}
   .field-table th,.field-table td{padding:.45rem .5rem;font-size:.78rem}
-  .field-table .auto-cell,.field-table .type-cell{display:none}
+  .field-table .auto-cell{display:none}
 }
 </style>
 </head>
@@ -581,11 +582,11 @@ function renderStep2(el){
       <div class="field-group-body">
         <table class="field-table">
           <thead><tr>
-            <th class="cb-cell">Extract</th>
-            <th>Field</th>
-            <th class="type-cell">Type</th>
-            <th class="auto-cell">Auto</th>
-            <th class="mandatory-cell">Required</th>
+            <th class="cb-cell">Include</th>
+            <th class="name-cell">Field Name</th>
+            <th class="type-cell">Data Type</th>
+            <th class="mandatory-cell">Mandatory</th>
+            <th class="auto-cell">Automatically Extracted</th>
           </tr></thead>
           <tbody>`;
 
@@ -600,8 +601,8 @@ function renderStep2(el){
         <td>
           <div style="font-weight:600;margin-bottom:.15rem">${f.label}</div>`;
 
-      // Show enums if any
-      if(allEnums.length > 0 || f.enums !== undefined){
+      // Show enums only when base enums exist
+      if(f.enums && f.enums.length > 0){
         html += `<div class="enum-area"><div class="enum-pills">`;
         (f.enums || []).forEach(ev => {
           html += `<span class="enum-pill">${ev}</span>`;
@@ -619,7 +620,6 @@ function renderStep2(el){
 
       html += `</td>
         <td class="type-cell"><span class="type-badge ${typeLower}">${f.type}</span></td>
-        <td class="auto-cell">${f.dta ? '<span class="auto-yes">Yes</span>' : '<span class="auto-no">No</span>'}</td>
         <td class="mandatory-cell">
           <label class="toggle-wrap" data-key="${f.key}">
             <div class="toggle-track ${isMandatory && isSelected ? 'on' : ''}" data-key="${f.key}">
@@ -627,6 +627,7 @@ function renderStep2(el){
             </div>
           </label>
         </td>
+        <td class="auto-cell">${f.dta ? '<span class="auto-yes">Yes</span>' : '<span class="auto-no">No</span>'}</td>
       </tr>`;
     });
 
