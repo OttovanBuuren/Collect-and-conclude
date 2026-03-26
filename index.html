@@ -588,8 +588,10 @@ function renderStep2(el){
     <p class="subtitle">Select and configure the fields to extract from the <strong>${doc.name}</strong>. Toggle extraction and mandatory status per field.</p>`;
 
   SALARY_FIELD_GROUPS.forEach((g, gi) => {
-    const groupFieldCount = g.fields.length;
-    const groupSelectedCount = g.fields.filter(f => state.selectedFields[f.key]).length;
+    const customFields = state.customGroupFields[gi] || [];
+    const allGroupFields = [...g.fields, ...customFields];
+    const groupFieldCount = allGroupFields.length;
+    const groupSelectedCount = allGroupFields.filter(f => state.selectedFields[f.key]).length;
     html += `<div class="field-group open" data-gi="${gi}">
       <div class="field-group-header" data-gi="${gi}">
         <div class="group-meta">
@@ -652,23 +654,33 @@ function renderStep2(el){
       html += renderFieldRow(f, true).replace('</tr>', `<td style="width:32px;text-align:center"><button class="remove-custom-field" data-gi="${gi}" data-cfi="${cfi}" title="Remove field">&times;</button></td></tr>`);
     });
 
-    html += `</tbody></table>
-      <div class="add-custom-field">
-        <div class="acf-group"><label class="acf-label">Field Name</label><input type="text" class="acf-name" data-gi="${gi}" placeholder="e.g. Bonus payment"></div>
-        <div class="acf-group"><label class="acf-label">Data Type</label><select class="acf-type" data-gi="${gi}">
+    html += `</tbody></table></div></div>`;
+  });
+
+  // Add custom field section at the bottom
+  html += `
+    <div class="field-group" style="border:2px dashed var(--accent);background:rgba(0,192,139,.03)">
+      <div class="field-group-header" style="cursor:default;background:transparent;border-bottom:none">
+        <div class="group-meta"><span style="color:var(--accent)">+ Add a custom field</span></div>
+      </div>
+      <div class="add-custom-field" style="border-top:none">
+        <div class="acf-group"><label class="acf-label">Add to group</label><select id="acfGroup">
+          ${SALARY_FIELD_GROUPS.map((g, gi) => `<option value="${gi}">${g.group}</option>`).join('')}
+        </select></div>
+        <div class="acf-group"><label class="acf-label">Field Name</label><input type="text" id="acfName" placeholder="e.g. Bonus payment"></div>
+        <div class="acf-group"><label class="acf-label">Data Type</label><select id="acfType">
           <option value="Text">Text</option>
           <option value="Decimal">Decimal</option>
           <option value="Integer">Integer</option>
           <option value="Date">Date</option>
           <option value="Boolean">Boolean</option>
         </select></div>
-        <div class="acf-group" style="flex:1"><label class="acf-label">Field Description <span style="font-weight:400;color:#aaa">(used as extraction prompt)</span></label>
-          <textarea class="acf-desc" data-gi="${gi}" placeholder="Describe what this field represents and how it appears on the document, e.g. &quot;The one-time bonus payment shown separately on the salary slip below the gross salary line.&quot;"></textarea>
+        <div class="acf-group" style="flex:1;min-width:100%"><label class="acf-label">Field Description <span style="font-weight:400;color:#aaa">(used as extraction prompt)</span></label>
+          <textarea id="acfDesc" class="acf-desc" placeholder="Describe what this field represents and how it appears on the document, e.g. &quot;The one-time bonus payment shown separately on the salary slip below the gross salary line.&quot;"></textarea>
         </div>
-        <button class="btn btn-secondary btn-sm add-custom-field-btn" data-gi="${gi}" style="align-self:flex-end">+ Add field</button>
+        <button class="btn btn-primary btn-sm" id="addCustomFieldBtn" style="align-self:flex-end">+ Add field</button>
       </div>
-    </div></div>`;
-  });
+    </div>`;
 
   el.innerHTML = html;
 
@@ -724,12 +736,12 @@ function renderStep2(el){
     render();
   }));
 
-  // Add custom field per group
-  el.querySelectorAll('.add-custom-field-btn').forEach(btn => btn.addEventListener('click', () => {
-    const gi = btn.dataset.gi;
-    const nameEl = el.querySelector(`.acf-name[data-gi="${gi}"]`);
-    const typeEl = el.querySelector(`.acf-type[data-gi="${gi}"]`);
-    const descEl = el.querySelector(`.acf-desc[data-gi="${gi}"]`);
+  // Add custom field (single form at bottom)
+  document.getElementById('addCustomFieldBtn').addEventListener('click', () => {
+    const gi = document.getElementById('acfGroup').value;
+    const nameEl = document.getElementById('acfName');
+    const typeEl = document.getElementById('acfType');
+    const descEl = document.getElementById('acfDesc');
     const name = nameEl.value.trim();
     const desc = descEl.value.trim();
     if(!name) { nameEl.style.borderColor='#e74c3c'; nameEl.focus(); return; }
@@ -738,7 +750,7 @@ function renderStep2(el){
     const key = 'custom_' + gi + '_' + Date.now();
     state.customGroupFields[gi].push({key, label:name, description:desc, type:typeEl.value, dta:false, enums:[], isCustom:true});
     render();
-  }));
+  });
 
   // Remove custom field
   el.querySelectorAll('.remove-custom-field').forEach(btn => btn.addEventListener('click', () => {
