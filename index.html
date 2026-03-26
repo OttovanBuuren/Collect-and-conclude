@@ -156,18 +156,40 @@ h2{font-size:1.35rem;margin-bottom:.25rem}
 .rule-header .mandatory-flag{font-size:.62rem;background:#FF6B6B;color:#fff;padding:2px 7px;border-radius:var(--radius-sm);font-weight:700;text-transform:uppercase;margin-left:.5rem}
 
 /* ---- SUMMARY ---- */
-.summary-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.75rem;margin-bottom:1.5rem}
-.summary-card h3{font-size:1rem;margin-bottom:.15rem}
-.summary-card .doc-type{font-size:1.1rem;color:var(--accent);font-weight:700;margin-bottom:1.25rem}
-.summary-field{padding:.6rem 0;border-bottom:1px solid #eee}
-.summary-field:last-child{border-bottom:none}
-.summary-field h4{font-size:.92rem;margin-bottom:.25rem;display:flex;align-items:center;gap:.4rem}
-.summary-field ul{list-style:disc;padding-left:1.25rem}
-.summary-field li{font-size:.84rem;color:#444;padding:.15rem 0}
-.summary-field li .badge{font-size:.6rem;background:var(--accent);color:var(--dark);padding:1px 5px;border-radius:var(--radius-sm);font-weight:700;margin-left:.3rem}
-.summary-meta{display:flex;gap:1rem;margin-bottom:.35rem;flex-wrap:wrap}
-.summary-meta span{font-size:.78rem;color:#666}
-.summary-meta strong{color:var(--text-dark)}
+.summary-header{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.5rem 1.75rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.summary-header .doc-type{font-size:1.15rem;color:var(--accent);font-weight:700}
+.summary-header .summary-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.summary-header .stat{font-size:.85rem;color:#666}
+.summary-header .stat strong{color:var(--text-dark)}
+
+.summary-group{margin-bottom:1.25rem}
+.summary-group-label{font-size:.88rem;font-weight:700;color:var(--dark);padding:.5rem 0 .3rem;border-bottom:2px solid var(--accent);margin-bottom:0}
+
+.summary-table{width:100%;border-collapse:collapse;background:var(--white);box-shadow:var(--shadow);border-radius:var(--radius);overflow:hidden}
+.summary-table th{text-align:left;font-size:.7rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;padding:.6rem 1rem;background:#fafbfa;border-bottom:1px solid #eee}
+.summary-table td{padding:.65rem 1rem;border-bottom:1px solid #f3f3f3;font-size:.84rem;vertical-align:top}
+.summary-table tr:last-child td{border-bottom:none}
+.summary-table tr:hover{background:#f8faf9}
+.summary-table .col-field{width:180px;font-weight:600}
+.summary-table .col-type{width:80px}
+.summary-table .col-mandatory{width:80px;text-align:center}
+.summary-table .col-auto{width:80px;text-align:center}
+.summary-table .col-enums{width:160px}
+.summary-table .col-rules{min-width:200px}
+.summary-table .rule-item{font-size:.78rem;color:#444;padding:.15rem 0;display:flex;align-items:flex-start;gap:.3rem}
+.summary-table .rule-item::before{content:'\u2022';color:var(--accent);font-weight:700;flex-shrink:0}
+.summary-table .rule-item .badge{font-size:.55rem;flex-shrink:0;margin-top:2px}
+.mandatory-yes{font-size:.68rem;background:#FF6B6B;color:#fff;padding:2px 8px;border-radius:10px;font-weight:700}
+.mandatory-no{font-size:.68rem;color:#ccc}
+.auto-badge-yes{font-size:.68rem;background:var(--accent);color:var(--dark);padding:2px 8px;border-radius:10px;font-weight:700}
+.auto-badge-no{font-size:.68rem;color:#ccc}
+.enum-list{display:flex;flex-wrap:wrap;gap:.25rem}
+.enum-list .enum-pill{font-size:.68rem;padding:1px 6px}
+.no-rules-text{font-size:.78rem;color:#bbb;font-style:italic}
+
+@media(max-width:768px){
+  .summary-table .col-auto,.summary-table .col-enums{display:none}
+}
 
 /* ---- BADGES / PILLS shared ---- */
 .badge{font-size:.65rem;background:var(--accent);color:var(--dark);padding:1px 6px;border-radius:var(--radius-sm);font-weight:700}
@@ -958,7 +980,7 @@ function renderStep3(el){
       const active = state.fieldRules[f.key] || [];
       const customs = state.fieldCustomRules[f.key] || [];
       const hasRules = rules.length > 0;
-      rulesHtml += `<div class="rule-row${hasRules ? '' : ' no-rules'}" data-field="${f.key}">
+      rulesHtml += `<div class="rule-row open${hasRules ? '' : ' no-rules'}" data-field="${f.key}">
         <div class="rule-header">
           <span>${f.label} <span class="type-badge ${f.type.toLowerCase()}" style="font-size:.62rem;vertical-align:middle">${f.type}</span></span>
           ${hasRules ? '<span class="arrow">\u25B6</span>' : '<span style="font-size:.78rem;color:#bbb">No predefined rules</span>'}
@@ -1037,36 +1059,64 @@ function openRow(fieldKey){
 function renderSummary(el){
   const doc = ALL_DOCS.find(d => d.id === state.docType);
   const selectedFields = getAllSelectedFieldObjects();
+  const totalFields = selectedFields.length;
+  const mandatoryCount = selectedFields.filter(f => state.mandatoryFields[f.key]).length;
+  const rulesCount = selectedFields.reduce((sum, f) => sum + (state.fieldRules[f.key]||[]).length + (state.fieldCustomRules[f.key]||[]).length, 0);
+
+  // Group fields by group
+  const grouped = [];
+  let curGroup = null;
+  selectedFields.forEach(f => {
+    if(f.group !== curGroup){ curGroup = f.group; grouped.push({group: f.group, fields:[]}); }
+    grouped[grouped.length-1].fields.push(f);
+  });
+
+  let tableHtml = '';
+  grouped.forEach(gf => {
+    tableHtml += `<div class="summary-group">
+      <div class="summary-group-label">${gf.group}</div>
+      <table class="summary-table">
+        <thead><tr>
+          <th class="col-field">Field Name</th>
+          <th class="col-type">Data Type</th>
+          <th class="col-mandatory">Mandatory</th>
+          <th class="col-auto">Auto</th>
+          <th class="col-enums">Allowed Values</th>
+          <th class="col-rules">Validation Rules</th>
+        </tr></thead>
+        <tbody>`;
+    gf.fields.forEach(f => {
+      const rules = state.fieldRules[f.key] || [];
+      const customs = state.fieldCustomRules[f.key] || [];
+      const isMandatory = !!state.mandatoryFields[f.key];
+      const allEnums = [...(f.enums||[]), ...(state.customEnums[f.key]||[])];
+      const typeLower = f.type.toLowerCase();
+      tableHtml += `<tr>
+        <td class="col-field">${f.label}${f.isCustom ? ' <span class="custom-field-badge">Custom</span>' : ''}</td>
+        <td class="col-type"><span class="type-badge ${typeLower}">${f.type}</span></td>
+        <td class="col-mandatory">${isMandatory ? '<span class="mandatory-yes">Yes</span>' : '<span class="mandatory-no">\u2014</span>'}</td>
+        <td class="col-auto">${f.dta ? '<span class="auto-badge-yes">Yes</span>' : '<span class="auto-badge-no">\u2014</span>'}</td>
+        <td class="col-enums">${allEnums.length ? '<div class="enum-list">' + allEnums.map(v => '<span class="enum-pill">' + v + '</span>').join('') + '</div>' : '<span style="color:#ccc">\u2014</span>'}</td>
+        <td class="col-rules">${rules.length || customs.length
+          ? rules.map(r => '<div class="rule-item">' + r + '</div>').join('') + customs.map(r => '<div class="rule-item">' + r + ' <span class="badge">custom</span></div>').join('')
+          : '<span class="no-rules-text">No rules</span>'}</td>
+      </tr>`;
+    });
+    tableHtml += `</tbody></table></div>`;
+  });
 
   el.innerHTML = `
     <h2>Configuration summary</h2>
-    <p class="subtitle">Review your extraction and validation configuration.</p>
-    <div class="summary-card">
-      <h3>Document type</h3>
-      <div class="doc-type">${doc.name}</div>
-      <h3 style="margin-bottom:.75rem">Configured fields &amp; rules</h3>
-      ${selectedFields.map(f => {
-        const rules = state.fieldRules[f.key] || [];
-        const customs = state.fieldCustomRules[f.key] || [];
-        const isMandatory = !!state.mandatoryFields[f.key];
-        const allEnums = [...(f.enums||[]), ...(state.customEnums[f.key]||[])];
-        return `<div class="summary-field">
-          <h4>${f.label}
-            <span class="type-badge ${f.type.toLowerCase()}">${f.type}</span>
-            ${isMandatory ? '<span style="font-size:.62rem;background:#FF6B6B;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700">REQUIRED</span>' : ''}
-            ${f.dta ? '<span style="font-size:.62rem;background:var(--accent);color:var(--dark);padding:2px 7px;border-radius:4px;font-weight:700">AUTO-EXTRACT</span>' : ''}
-          </h4>
-          <div class="summary-meta">
-            <span>Group: <strong>${f.group}</strong></span>
-            ${allEnums.length ? '<span>Allowed values: <strong>' + allEnums.join(', ') + '</strong></span>' : ''}
-          </div>
-          ${rules.length || customs.length ? `<ul>
-            ${rules.map(r => `<li>${r}</li>`).join('')}
-            ${customs.map(r => `<li>${r}<span class="badge">custom</span></li>`).join('')}
-          </ul>` : '<p style="font-size:.84rem;color:#999;margin-top:.15rem">No validation rules configured</p>'}
-        </div>`;
-      }).join('')}
-    </div>`;
+    <p class="subtitle">Review your complete extraction and validation configuration.</p>
+    <div class="summary-header">
+      <div><span style="font-size:.78rem;color:#888">Document type</span><br><span class="doc-type">${doc.name}</span></div>
+      <div class="summary-stats">
+        <div class="stat"><strong>${totalFields}</strong> fields configured</div>
+        <div class="stat"><strong>${mandatoryCount}</strong> mandatory</div>
+        <div class="stat"><strong>${rulesCount}</strong> validation rules</div>
+      </div>
+    </div>
+    ${tableHtml}`;
 
   // Sticky bar
   document.getElementById('stickyBar').innerHTML = `<div class="sticky-bottom"><div class="inner">
